@@ -1,0 +1,191 @@
+
+buildscript {
+  repositories {
+    mavenCentral()
+    google()
+  }
+}
+apply plugin: 'com.android.application'
+
+
+android {
+  namespace = "com.sellgirl.castScreen"
+  compileSdkVersion 36//34
+  sourceSets {
+    main {
+      manifest.srcFile 'AndroidManifest.xml'
+      java.setSrcDirs(['src/main/java'])
+      aidl.setSrcDirs(['src/main/java'])
+      renderscript.setSrcDirs(['src/main/java'])
+      res.setSrcDirs(['res'])
+      assets.setSrcDirs(['../assets'])
+      jniLibs.setSrcDirs(['libs'])
+    }
+  }
+  packagingOptions {
+		resources {
+			excludes += ['META-INF/robovm/ios/robovm.xml', 'META-INF/DEPENDENCIES.txt', 'META-INF/DEPENDENCIES',
+                   'META-INF/dependencies.txt', '**/*.gwt.xml']
+			pickFirsts += ['META-INF/LICENSE.txt', 'META-INF/LICENSE', 'META-INF/license.txt', 'META-INF/LGPL2.1',
+                     'META-INF/NOTICE.txt', 'META-INF/NOTICE', 'META-INF/notice.txt']
+		}
+  }
+  defaultConfig {
+    applicationId 'com.sellgirl.castScreen'
+    minSdkVersion 26//21//19//36//21//jetty9要求26+
+    targetSdkVersion 36//34//36
+    versionCode 1
+    versionName "1.0"
+    multiDexEnabled true
+  }
+  compileOptions {
+    sourceCompatibility "17"
+    targetCompatibility "17"
+    coreLibraryDesugaringEnabled = true
+  }
+  buildTypes {
+    release {
+      minifyEnabled true
+      proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), 'proguard-rules.pro'
+    }
+  }
+}
+
+repositories {
+  // needed for AAPT2, may be needed for other tools
+  google()
+}
+
+configurations { natives }
+
+dependencies {
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+  implementation "com.badlogicgames.gdx-controllers:gdx-controllers-android:$gdxControllersVersion"
+  implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+  implementation project(':core')
+
+
+  // Cling Core Library for UPnP/DLNA
+  //implementation 'org.fourthline.cling:cling-core:2.1.2'
+  //implementation 'org.fourthline.cling:cling-support:2.1.2'
+//  implementation 'com.github.nova-video-player:cling:master-SNAPSHOT'
+//  implementation 'org.jupnp:jupnp-core:2.7.0'
+//  implementation 'org.jupnp:jupnp-support:2.7.0' // 如需 DLNA 支持
+//  implementation 'org.jupnp:jupnp:3.0.4'
+//  // 核心库
+////  implementation 'org.jupnp:org.jupnp:3.0.4'
+//  implementation('org.jupnp:org.jupnp:3.0.4') {
+//    exclude group: 'org.jupnp', module: 'org.jupnp.osgi'
+//    exclude group: 'org.osgi'
+//  }
+//  // DLNA/UPnP-AV 支持库（投屏必需）
+//  implementation 'org.jupnp:org.jupnp.support:3.0.4'
+//
+//  // Android 平台适配库（Android 项目推荐）
+//  implementation 'org.jupnp:org.jupnp.android:3.0.4'
+//
+////  // Cling requires a compatible HTTP implementation
+////  implementation ('org.eclipse.jetty:jetty-server:8.1.22.v20160922') {
+////    exclude group: 'javax.servlet'
+////  }
+////  implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+////  implementation 'org.eclipse.jetty:jetty-http:8.1.22.v20160922'
+////  implementation 'org.eclipse.jetty:jetty-io:8.1.22.v20160922'
+////  implementation 'org.eclipse.jetty:jetty-util:8.1.22.v20160922'
+//  // Jetty 依赖（jUPnP 必需的 HTTP 实现）
+//  implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
+//  implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+//  implementation 'org.eclipse.jetty:jetty-http:8.1.22.v20160922'
+//  implementation 'org.eclipse.jetty:jetty-io:8.1.22.v20160922'
+//  implementation 'org.eclipse.jetty:jetty-util:8.1.22.v20160922'
+  // jUPnP 核心
+  implementation 'org.jupnp:org.jupnp:3.0.4'
+  implementation 'org.jupnp:org.jupnp.support:3.0.4'
+  implementation 'org.jupnp:org.jupnp.android:3.0.4'
+
+  // 显式引入 Jetty 9 (统一版本，避免冲突)
+  implementation 'org.eclipse.jetty:jetty-server:9.4.48.v20220622'
+  implementation 'org.eclipse.jetty:jetty-client:9.4.48.v20220622'
+  implementation 'org.eclipse.jetty:jetty-http:9.4.48.v20220622'
+  implementation 'org.eclipse.jetty:jetty-io:9.4.48.v20220622'
+  implementation 'org.eclipse.jetty:jetty-util:9.4.48.v20220622'
+  implementation 'org.eclipse.jetty:jetty-servlet:9.4.48.v20220622'
+
+//  implementation 'org.slf4j:slf4j-android:1.7.30'
+//  compileOnly 'org.slf4j:slf4j-log4j12:1.7.30'
+//  implementation 'log4j:log4j:1.2.17'
+
+  // NanoHTTPD（轻量级 HTTP 服务器）
+  implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+  // SLF4J Android（消除警告）
+  implementation 'org.slf4j:slf4j-android:1.7.30'
+
+  implementation "com.sellgirl:sgJavaHelper:$sgVersion"
+  implementation "com.sellgirl:sgGameHelper:$sgGameVersion"
+
+  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-arm64-v8a"
+  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
+  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
+  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86_64"
+  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
+  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
+  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
+
+}
+
+// Called every time gradle gets executed, takes the native dependencies of
+// the natives configuration, and extracts them to the proper libs/ folders
+// so they get packed with the APK.
+tasks.register('copyAndroidNatives') {
+  doFirst {
+    file("libs/armeabi-v7a/").mkdirs()
+    file("libs/arm64-v8a/").mkdirs()
+    file("libs/x86_64/").mkdirs()
+    file("libs/x86/").mkdirs()
+
+    configurations.natives.copy().files.each { jar ->
+      def outputDir = null
+      if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
+      if(jar.name.endsWith("natives-arm64-v8a.jar")) outputDir = file("libs/arm64-v8a")
+      if(jar.name.endsWith("natives-x86_64.jar")) outputDir = file("libs/x86_64")
+      if(jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
+      if(outputDir != null) {
+        copy {
+          from zipTree(jar)
+          into outputDir
+          include "*.so"
+        }
+      }
+    }
+  }
+}
+
+tasks.matching { it.name.contains("merge") && it.name.contains("JniLibFolders") }.configureEach { packageTask ->
+  packageTask.dependsOn 'copyAndroidNatives'
+}
+
+tasks.register('run', Exec) {
+  def path
+  def localProperties = project.file("../local.properties")
+  if (localProperties.exists()) {
+    Properties properties = new Properties()
+    localProperties.withInputStream { instr ->
+      properties.load(instr)
+    }
+    def sdkDir = properties.getProperty('sdk.dir')
+    if (sdkDir) {
+      path = sdkDir
+    } else {
+      path = "$System.env.ANDROID_SDK_ROOT"
+    }
+  } else {
+    path = "$System.env.ANDROID_SDK_ROOT"
+  }
+
+  def adb = path + "/platform-tools/adb"
+  commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher'
+}
+
+eclipse.project.name = appName + "-android"
