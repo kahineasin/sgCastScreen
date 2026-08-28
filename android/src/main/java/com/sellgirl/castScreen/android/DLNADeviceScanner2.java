@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.castScreen.IDLNADeviceScanner;
@@ -16,6 +17,8 @@ import org.jupnp.android.AndroidUpnpService;
 import org.jupnp.android.AndroidUpnpServiceImpl;
 import org.jupnp.model.meta.Device;
 import org.jupnp.model.meta.RemoteDevice;
+import org.jupnp.model.meta.Service;
+import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.registry.DefaultRegistryListener;
 import org.jupnp.registry.Registry;
@@ -27,6 +30,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class DLNADeviceScanner2 implements IDLNADeviceScanner {
     private static final String TAG = "DLNADeviceScanner";
     private AndroidUpnpService upnpService;
+
+//    private final Array2<Device> rawDeviceList = new Array2<>();
     private final CopyOnWriteArrayList<DLNADevice> deviceList = new CopyOnWriteArrayList<>();
     private final Array2<DeviceIp> deviceIps=new Array2<>();
     private OnDeviceScanListener listener;
@@ -113,7 +118,10 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
                 @Override
                 public void deviceAdded(Registry registry, Device device) {
                      DLNADevice dlnaDevice = new DLNADevice((RemoteDevice) device);
-                    if (!deviceList.contains(dlnaDevice)) {
+                    if (!deviceList.contains(dlnaDevice) //虽然上面是new, 但这里contains没问题,因为DLNADevice复写了equals方法.
+//                    !rawDeviceList.contains(device,true)
+                    ) {
+//                        rawDeviceList.add(device);
                         deviceList.add(dlnaDevice);
                         DeviceIp ip=new DeviceIp();
                         ip.udn=dlnaDevice.getUDN().getIdentifierString();
@@ -130,14 +138,44 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
                         deviceIps.add(ip);
                         if (listener != null) listener.onDeviceFound(dlnaDevice);
                         if (listener2 != null) listener2.onDeviceFound(ip);
+
+//
+//                        // 打印设备名称和服务信息
+//                        Log.d(TAG, "Device: " + dlnaDevice.getFriendlyName());
+//                        for (Service service : device.getServices()) {
+//                            ServiceType type = service.getServiceType();
+//                            Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+//                        }
+
+                    }else{
+                        int a=1;
+                        Log.d(TAG, "--------------------contains-------------");
                     }
+
                 }
 
                 @Override
                 public void deviceRemoved(Registry registry, Device device) {
+
+//                    rawDeviceList.removeValue(device,true);
+
                     DLNADevice dlnaDevice = new DLNADevice((RemoteDevice) device);
                     deviceList.remove(dlnaDevice);
                     int idx=0;
+
+//                    DLNADevice dlnaDevice=null;
+//                    for(DLNADevice i:deviceList){
+//                        if(//i.name.equals(device.getDetails().getFriendlyName())
+//                            i.equals()
+//                        ){
+//                            find=deviceIps.get(idx);
+//                            deviceIps.removeIndex(idx);
+//                            break;
+//                        }
+//                        idx++;
+//                    }
+
+                    idx=0;
                     DeviceIp find=null;
                     for(DeviceIp i:deviceIps){
                         if(//i.name.equals(device.getDetails().getFriendlyName())

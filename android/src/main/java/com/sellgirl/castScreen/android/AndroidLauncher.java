@@ -9,13 +9,17 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.IDLNADeviceCaster;
-import com.sellgirl.castScreen.android.send.DLNACastManager;
 import com.sellgirl.castScreen.model.DeviceIp;
+//import com.sellgirl.castScreen.android.send.DLNACastManager;
+import com.sellgirl.castScreen.android.sendimg.DLNACastManager;
 
 import org.jupnp.UpnpService;
+import org.jupnp.model.meta.Service;
+import org.jupnp.model.types.ServiceType;
 
 /** Launches the Android application. */
 public class AndroidLauncher extends AndroidApplication {
+    private  final String TAG="AndroidLauncher";
 //    @Override
 //    protected void onCreate(Bundle savedInstanceState) {
 //        super.onCreate(savedInstanceState);
@@ -140,11 +144,22 @@ protected DLNADeviceScanner2 scanner;
             ) {
                 UpnpService upnpService=scanner.getUpnpService();
                 DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
-                castManager.startStreaming(AndroidLauncher.this, device, upnpService);
+
+
+//                castManager.startStreaming(AndroidLauncher.this, device, upnpService);
+                castManager.startStreaming2(AndroidLauncher.this, device, upnpService);
+
+                // 打印设备名称和服务信息
+                Log.d(TAG, "Device: " + device.getFriendlyName());
+                for (Service service : device.getRawDevice().getServices()) {
+                    ServiceType type = service.getServiceType();
+                    Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+                }
             }
         });
 
         new Thread(() -> scanner.startScan()).start();
+
     }
 
     // 用户选择设备后调用
