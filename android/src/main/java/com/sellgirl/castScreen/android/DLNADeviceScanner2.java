@@ -11,6 +11,16 @@ import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.castScreen.IDLNADeviceScanner;
 import com.sellgirl.castScreen.IOnDeviceScanListener;
 import com.sellgirl.sgGameHelper.list.Array2;
+import com.sellgirl.sgJavaHelper.config.SGDataHelper;
+
+import org.jupnp.binding.xml.DeviceDescriptorBinder;
+import org.jupnp.binding.xml.UDA10DeviceDescriptorBinderImpl;
+import org.jupnp.model.message.header.STAllHeader;
+import org.jupnp.model.message.header.UpnpHeader;
+import org.jupnp.model.meta.DeviceIdentity;
+import org.jupnp.model.meta.RemoteDeviceIdentity;
+import org.jupnp.model.types.DeviceType;
+import org.jupnp.model.message.header.DeviceTypeHeader;
 
 import org.jupnp.UpnpService;
 import org.jupnp.android.AndroidUpnpService;
@@ -18,14 +28,21 @@ import org.jupnp.android.AndroidUpnpServiceImpl;
 import org.jupnp.model.meta.Device;
 import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.model.meta.Service;
+import org.jupnp.model.types.DeviceType;
 import org.jupnp.model.types.ServiceType;
 import org.jupnp.model.types.UDN;
 import org.jupnp.registry.DefaultRegistryListener;
 import org.jupnp.registry.Registry;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class DLNADeviceScanner2 implements IDLNADeviceScanner {
     private static final String TAG = "DLNADeviceScanner";
@@ -117,64 +134,73 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
             registry.addListener(new DefaultRegistryListener() {
                 @Override
                 public void deviceAdded(Registry registry, Device device) {
-                     DLNADevice dlnaDevice = new DLNADevice((RemoteDevice) device);
-                    if (!deviceList.contains(dlnaDevice) //虽然上面是new, 但这里contains没问题,因为DLNADevice复写了equals方法.
+                    try {
+                        DLNADevice dlnaDevice = new DLNADevice((RemoteDevice) device);
+                        if (!deviceList.contains(dlnaDevice) //虽然上面是new, 但这里contains没问题,因为DLNADevice复写了equals方法.
 //                    !rawDeviceList.contains(device,true)
-                    ) {
+                        ) {
 //                        rawDeviceList.add(device);
-                        deviceList.add(dlnaDevice);
-                        DeviceIp ip=new DeviceIp();
-                        ip.udn=dlnaDevice.getUDN().getIdentifierString();
-                        URI uri = null;
-                        try {
-                            uri = new URI(dlnaDevice.getLocation());
-                            ip.ip=uri.getHost(); // 返回 "192.168.1.100"
-                            ip.port=uri.getPort();
-                        } catch (URISyntaxException e) {
+                            deviceList.add(dlnaDevice);
+                            DeviceIp ip = new DeviceIp();
+                            ip.udn = dlnaDevice.getUDN().getIdentifierString();
+                            URI uri = null;
+                            try {
+                                ip.location=dlnaDevice.getLocation();
+                                uri = new URI(ip.location);
+                                ip.ip = uri.getHost(); // 返回 "192.168.1.100"
+                                ip.port = uri.getPort();
+                            } catch (URISyntaxException e) {
 //                            throw new RuntimeException(e);
-                        }
-                        if(null==ip.ip){ip.ip=dlnaDevice.getLocation();}
-                        ip.name=dlnaDevice.getFriendlyName();
-                        deviceIps.add(ip);
-                        if (listener != null) listener.onDeviceFound(dlnaDevice);
-                        if (listener2 != null) listener2.onDeviceFound(ip);
+                            }
+                            if (null == ip.ip) {
+                                ip.ip = dlnaDevice.getLocation();
+                            }
+                            ip.name = dlnaDevice.getFriendlyName();
+                            deviceIps.add(ip);
+                            if (listener != null) listener.onDeviceFound(dlnaDevice);
+                            if (listener2 != null) listener2.onDeviceFound(ip);
 
+                            if("客厅极光TV(dlna)".equals(ip.name)){
+                                int a=1;
+                            }
 //
-//                        // 打印设备名称和服务信息
-//                        Log.d(TAG, "Device: " + dlnaDevice.getFriendlyName());
-//                        for (Service service : device.getServices()) {
-//                            ServiceType type = service.getServiceType();
-//                            Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
-//                        }
+                        // 打印设备名称和服务信息
+                        Log.d(TAG, "Device: " + dlnaDevice.getFriendlyName());
+                        for (Service service : device.getServices()) {
+                            ServiceType type = service.getServiceType();
+                            Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+                        }
 
-                    }else{
-                        int a=1;
-                        Log.d(TAG, "--------------------contains-------------");
+                        } else {
+                            int a = 1;
+                            Log.d(TAG, "--------------------contains-------------");
+                        }
+                    }catch (Throwable e){
+                        SGDataHelper.getLog().printException(e,TAG);
                     }
-
                 }
 
                 @Override
                 public void deviceRemoved(Registry registry, Device device) {
 
-//                    rawDeviceList.removeValue(device,true);
-
+////                    rawDeviceList.removeValue(device,true);
+//
                     DLNADevice dlnaDevice = new DLNADevice((RemoteDevice) device);
-                    deviceList.remove(dlnaDevice);
+//                    deviceList.remove(dlnaDevice);
                     int idx=0;
-
-//                    DLNADevice dlnaDevice=null;
-//                    for(DLNADevice i:deviceList){
-//                        if(//i.name.equals(device.getDetails().getFriendlyName())
-//                            i.equals()
-//                        ){
-//                            find=deviceIps.get(idx);
-//                            deviceIps.removeIndex(idx);
-//                            break;
-//                        }
-//                        idx++;
-//                    }
-
+//
+////                    DLNADevice dlnaDevice=null;
+////                    for(DLNADevice i:deviceList){
+////                        if(//i.name.equals(device.getDetails().getFriendlyName())
+////                            i.equals()
+////                        ){
+////                            find=deviceIps.get(idx);
+////                            deviceIps.removeIndex(idx);
+////                            break;
+////                        }
+////                        idx++;
+////                    }
+//
                     idx=0;
                     DeviceIp find=null;
                     for(DeviceIp i:deviceIps){
@@ -182,7 +208,7 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
                             i.udn.equals(dlnaDevice.getUDN().getIdentifierString())
                         ){
                             find=deviceIps.get(idx);
-                            deviceIps.removeIndex(idx);
+//                            deviceIps.removeIndex(idx);
                             break;
                         }
                         idx++;
@@ -191,7 +217,13 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
                     if ( listener2 != null&&null!=find) listener2.onDeviceLost(find);
                 }
             });
+
             upnpService.getControlPoint().search();
+
+// 只搜索 MediaRenderer 类型的设备
+//        DeviceType mediaRendererType = new DeviceType("schemas-upnp-org", "MediaRenderer", 1);
+//        upnpService.getControlPoint().search(new DeviceTypeHeader(mediaRendererType));
+//        upnpService.getControlPoint().search(new STAllHeader());
 //        }
     }
 //    public CopyOnWriteArrayList<DLNADevice> getDeviceList(){
@@ -245,9 +277,55 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             DLNADevice that = (DLNADevice) o;
-            return getUDN().equals(that.getUDN());
+            return getUDN().equals(that.getUDN())&&getLocation().equals(that.getLocation());
         }
         @Override
         public int hashCode() { return getUDN().hashCode(); }
+    }
+
+
+//    /**
+//     * 从缓存的 location URL 直接加载设备，跳过 SSDP 搜索。
+//     * @param location 设备描述文件 URL（如 http://192.168.10.22:39520/description.xml）
+//     * @return RemoteDevice 对象，加载失败返回 null
+//     */
+//    public RemoteDevice loadDeviceFromLocation(String location) {
+//        try {
+//            DeviceDescriptorBinder binder = new UDA10DeviceDescriptorBinderImpl();
+//            // 注意：第二个参数是 System.getProperty("line.separator")，可为 null
+//            RemoteDevice device = (RemoteDevice) binder.describe(new URL(location), null);
+//            Log.d(TAG, "Loaded device from cache: " + device.getDetails().getFriendlyName());
+//            return device;
+//        } catch (Exception e) {
+//            Log.e(TAG, "Failed to load device from " + location, e);
+//            return null;
+//        }
+//    }
+
+
+    public RemoteDevice loadDeviceFromLocation(String locationUrl) {
+        try {
+            // 用 XML 解析器构建 Document
+            Document doc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new URL(locationUrl).openStream());
+
+            // 绑定器直接解析 Document，传 null 让它自己创建 RemoteDevice
+            DeviceDescriptorBinder binder = new UDA10DeviceDescriptorBinderImpl();
+            //org.jupnp.binding.xml.DescriptorBindingException: Could not parse device DOM //todo
+            return (RemoteDevice) binder.describe(null, doc);
+        } catch (Exception e) {
+            Log.e(TAG, "Load failed", e);
+            return null;
+        }
+    }
+    /**
+     * 手动将设备添加到 Registry，使其可被后续操作使用。
+     */
+    public void addDeviceToRegistry(RemoteDevice device) {
+        if (upnpService != null && upnpService.getRegistry() != null) {
+            upnpService.getRegistry().addDevice(device);
+            Log.d(TAG, "Device added to registry: " + device.getDetails().getFriendlyName());
+        }
     }
 }

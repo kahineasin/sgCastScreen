@@ -14,6 +14,7 @@ import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.castScreen.android.sendimg.DLNACastManager;
 
 import org.jupnp.UpnpService;
+import org.jupnp.model.meta.RemoteDevice;
 import org.jupnp.model.meta.Service;
 import org.jupnp.model.types.ServiceType;
 
@@ -154,11 +155,15 @@ protected DLNADeviceScanner2 scanner;
                 for (Service service : device.getRawDevice().getServices()) {
                     ServiceType type = service.getServiceType();
                     Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+                    Log.d(TAG, "  url: "+device.getLocation());
                 }
             }
         });
 
-        new Thread(() -> scanner.startScan()).start();
+        new Thread(() -> {
+            scanner.startScan();
+            scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
+        }).start();
 
     }
 
