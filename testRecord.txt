@@ -1,0 +1,130 @@
+信号列表:
+客厅极光TV(dlna) 	192.168.10.22	//手机bilibili能用此信号播放, DLNADeviceScanner搜索不到此信号(有時等很久也能搜到,要等5分鐘以上
+Wireless N Range Extender WA9EERE	//DLNADeviceScanner搜到這, 作用不明
+
+http://192.168.10.22:41873/sony/webapi/ssdp/dd.xml
+ip = {DeviceIp@22800}
+ ip = "192.168.10.22"
+ name = "SONY XR-65X95EK"
+ port = 41873
+ udn = "0b4f159d-2229-4b11-a9b5-5e1531372582"
+
+http://192.168.10.22:49152/description.xml
+ip = {DeviceIp@22837}
+ ip = "192.168.10.22"
+ name = "乐播投屏（SONY XR-65X95EK）"
+ port = 49152
+ udn = "a4494755-6854-8b08-3ffa-574c2c1a3faa"
+
+http://192.168.10.22:39520/description.xml
+ip = {DeviceIp@22856}
+ ip = "192.168.10.22"
+ name = "客厅极光TV(dlna)"
+ port = 39520
+ udn = "990a-a184-eded-e14b"
+
+查看設備信號:
+http://192.168.10.22/description.xml
+
+这里有几个问题:
+(下面把我做的新投屏软件(libGDX框架)记作A软件)
+1. 为什么我的A软件在Oukitel安卓手机上只搜索到3个信号"乐播投屏" "我的小电视(bilibili)" "SONY XR-64X95EK(腾信的newTV)"
+    其实这样是对的
+2. 引用关系似乎有问题. 我觉得,
+    a. 扫描类应该放到A软件的core模块(跨平台), 因为dlna广播接收协议应该是跨平台的吧, (比如从安卓手机投影到苹果手机, 理论上可行?).
+       问题是, 我看到现在得扫描类好像有引用到android类库? 你是不是应该分离一下扫描类.
+    b. 投屏类应该写在A软件的android模块, 如果想投屏到电脑上, 那得在lwjgl3模块里面增加投屏类
+
+
+-------------------------------
+
+是不是库版本问题, DLNACastManager有几处标红报错:
+1.
+        Service avTransport = targetDevice.findService(new ServiceType("urn:schemas-upnp-org:service:AVTransport:1"));
+    ServiceType 只有两个构造函数
+    public ServiceType(String namespace, String type)
+    public ServiceType(String namespace, String type, int version) {
+2.
+new org.jupnp.support.model.item.Item.ItemId("0") //没有ItemId这个类, 最后的Item使  org.jupnp.support.model.item.Item extends DIDLObject
+3.
+new Res(videoUrl, "video/mp2t")
+
+--------------
+投 图片
+生成图片到:
+http://192.168.10.104:8080/image.jpg
+
+按你的代码加了, 但投屏不成功.
+
+DLNACastManager.castImage()方法中controlPoint.execute()的success回调方法没有执行. logcat报错:
+2026-08-28 14:35:09.990 20177-20833 CastManager             com.sellgirl.castScreen              E  SetAVTransportURI (Image) failed: Error: Current state of service prevents invoking that action. Error writing request message. Can't transform message payload. (HTTP response was: 500 Internal Server Error)
+
+另外, 调试看到castImage的imageUrl值是http://192.168.10.104:8080/image.jpg ,这个ip和手机连接wifi时的手机ip一致, 如果生成图片正常的情况下, 我是不是应该可以直接在电脑端打开这个地址看到图片?(现在电脑打开这个地址是无页面
+
+
+首先 电脑打开 http://192.168.10.104:8080/image.jpg 有图片, 手机打开 http://localhost:8080/image.jpg 也有图片, 所以SteamServer应该是没问题了?
+
+然后发现问题:
+        ServiceType avType = new ServiceType("schemas-upnp-org", "AVTransport", 1);
+        Service avTransport = targetDevice.findService(avType);
+        if (avTransport == null) {
+
+选择"乐播投屏"信号时, avTransport是有值的, 但选择电视预装的NewTV的信号(SONY XR-65X95EK)时, avTransport为null, 时avType的参数问题吗?(乐播也播不了图,但先不管,先把电视预装的信号调试通)
+
+
+搜索到的 2026-08-28 17:08:40.260 21542-21700 DLNA                    com.sellgirl.castScreen              D  Found: 客厅极光TV(dlna)
+2026-08-28 17:08:40.262 21542-21700 System.out              com.sellgirl.castScreen              I  DLNA Found: 客厅极光TV(dlna)
+为什么没有显示到scanner?
+
+调试打印电视信号
+2026-08-28 15:20:23.361 31343-31594 DLNADeviceScanner       com.sellgirl.castScreen              D  Device: SONY XR-65X95EK
+2026-08-28 15:20:23.361 31343-31594 DLNADeviceScanner       com.sellgirl.castScreen              D    Service: schemas-sony-com:ScalarWebAPI v1
+2026-08-28 15:20:23.361 31343-31594 DLNADeviceScanner       com.sellgirl.castScreen              D    Service: schemas-sony-com:IRCC v1
+
+
+deepseek说newTV没有暴露dlna信号
+
+
+继续调试乐播, 报错
+SetAVTransportURI (Image) failed: Error: Current state of service prevents invoking that action. Error writing request message. Can't transform message payload. (HTTP response was: 500 Internal Server Error)
+
+接下来, 最好自己做接收端,安装到电视,因为内置的没用?
+------------------
+仍然报错
+                                                                                                    org.jupnp.binding.xml.DescriptorBindingException: Could not parse device DOM
+                                                                                                    	at org.jupnp.binding.xml.UDA10DeviceDescriptorBinderImpl.describe(UDA10DeviceDescriptorBinderImpl.java:136)
+                                                                                                    	at com.sellgirl.castScreen.android.DLNADeviceScanner2.loadDeviceFromLocation(DLNADeviceScanner2.java:316)
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher.lambda$onCreate$0(AndroidLauncher.java:165)
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher.$r8$lambda$cpz8CQAKMBlnnKlkqYFIo-jJoTM(AndroidLauncher.java:0)
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+                                                                                                    	at java.lang.Thread.run(Thread.java:1572)
+                                                                                                    Caused by: org.jupnp.binding.xml.DescriptorBindingException: No <device> element in <root>
+                                                                                                    	at org.jupnp.binding.xml.UDA10DeviceDescriptorBinderImpl.hydrateRoot(UDA10DeviceDescriptorBinderImpl.java:192)
+                                                                                                    	at org.jupnp.binding.xml.UDA10DeviceDescriptorBinderImpl.describe(UDA10DeviceDescriptorBinderImpl.java:128)
+                                                                                                    	at com.sellgirl.castScreen.android.DLNADeviceScanner2.loadDeviceFromLocation(DLNADeviceScanner2.java:316) 
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher.lambda$onCreate$0(AndroidLauncher.java:165) 
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher.$r8$lambda$cpz8CQAKMBlnnKlkqYFIo-jJoTM(AndroidLauncher.java:0) 
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0) 
+                                                                                                    	at java.lang.Thread.run(Thread.java:1572) 
+
+断点调试发现问题在于:
+org.jupnp.binding.xml.UDA10DeviceDescriptorBinderImpl
+if(ELEMENT.device.equals(rootChild))  这句是false, 所以判断不是device节点.
+神奇的是 ElementImpl rootChild 这个类型 rootChild.localName的值是"device"是正确的, 但equals调用的是rootChild.getLocalName() 这个方法返回null , 所以判断不相等.
+class ElementImpl{
+    @Override
+    public String getLocalName() {
+        return namespaceAware ? localName : null;
+    }
+}
+由于namespaceAware为false, 所以拿不到localName, 现在怎么解决?
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);  // <--- 必须加这一行
+---------------
+新问题
+avTransport.getAction("SetAVTransportURI")
+上面这句报错, actions.length 是0
+怎么解决?
+
+用 SimpleCastManager 新类加载, 成功在电视播放mp4

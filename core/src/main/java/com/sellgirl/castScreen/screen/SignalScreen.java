@@ -160,6 +160,7 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                     });
                     listTable.add(btn).spaceBottom(buttonSpace);
                     listTable.row();
+                    listTable.layout();
                 });
             }
             @Override public void onDeviceLost(DeviceIp device) {}

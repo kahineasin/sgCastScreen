@@ -9,9 +9,11 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.IDLNADeviceCaster;
+import com.sellgirl.castScreen.android.sendimg.SimpleCastManager;
 import com.sellgirl.castScreen.model.DeviceIp;
 //import com.sellgirl.castScreen.android.send.DLNACastManager;
 import com.sellgirl.castScreen.android.sendimg.DLNACastManager;
+import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import org.jupnp.UpnpService;
 import org.jupnp.model.meta.RemoteDevice;
@@ -135,7 +137,11 @@ protected DLNADeviceScanner2 scanner;
                 Log.e("DLNA", "Error: " + error);
             }
         });
+//        scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
         game.setScanner(scanner);
+
+
+//        SGDataHelper.sgLog=new SGLibGdxLog();
 
         castManager = new DLNACastManager();
         game.setCaster(new IDLNADeviceCaster() {
@@ -163,8 +169,22 @@ protected DLNADeviceScanner2 scanner;
         new Thread(() -> {
             scanner.startScan();
             scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
-        }).start();
 
+            SimpleCastManager castManager2 = new SimpleCastManager();
+
+            // 从缓存加载 location
+            String location ="http://192.168.10.22:39520/description.xml";// deviceCache.getCachedLocation();
+            if (location != null && castManager2.loadDevice(location)) {
+                // 投屏测试
+//                String videoUrl = "http://你的手机IP:8080/stream.ts"; // 先填一个测试视频 URL
+                String videoUrl="http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4";
+                if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+                    castManager2.play();
+                }
+            }
+            int aa=1;
+        }).start();
+        int aa=1;
     }
 
     // 用户选择设备后调用
