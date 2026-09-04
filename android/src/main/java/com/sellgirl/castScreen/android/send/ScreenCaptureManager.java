@@ -10,10 +10,16 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
+
+import androidx.annotation.NonNull;
+
+import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import java.nio.ByteBuffer;
 
@@ -40,10 +46,26 @@ public class ScreenCaptureManager {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data, Activity activity) {
+//        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+//            MediaProjectionManager manager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+//            mediaProjection = manager.getMediaProjection(resultCode, data);
+//            startEncoding(activity);
+//        }
+
         if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             MediaProjectionManager manager = (MediaProjectionManager) activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             mediaProjection = manager.getMediaProjection(resultCode, data);
-            startEncoding(activity);
+
+            // 【关键】在创建 VirtualDisplay 之前，先注册 MediaProjection 回调
+            mediaProjection.registerCallback(new MediaProjection.Callback() {
+                @Override
+                public void onStop() {
+                    Log.d(TAG, "MediaProjection stopped by system");
+                    // 这里可以清理资源，例如停止编码
+                }
+            }, null); // 第二个参数为 Handler，null 表示使用主线程
+
+            startEncoding(activity); // 这里会调用 createVirtualDisplay
         }
     }
 
@@ -70,7 +92,28 @@ public class ScreenCaptureManager {
             virtualDisplay = mediaProjection.createVirtualDisplay(
                 "ScreenCast", width, height, dpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                inputSurface, null, null
+                inputSurface, new VirtualDisplay.Callback() {
+                    @Override
+                    public void onPaused() {
+                        super.onPaused();
+                    }
+
+                    @Override
+                    public void onResumed() {
+                        super.onResumed();
+                    }
+
+                    @Override
+                    public void onStopped() {
+                        super.onStopped();
+                    }
+                }, new Handler(new Handler.Callback() {
+                    @Override
+                    public boolean handleMessage(@NonNull Message msg) {
+                        SGDataHelper.getLog().print(msg);
+                        return true;
+                    }
+                })
             );
 
             isStreaming = true;

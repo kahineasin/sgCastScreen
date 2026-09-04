@@ -128,3 +128,98 @@ avTransport.getAction("SetAVTransportURI")
 怎么解决?
 
 用 SimpleCastManager 新类加载, 成功在电视播放mp4
+---------------------
+现在开始做"手机桌面投屏".
+你之前写的DLNACastManager 可以启动手机服务http://192.168.10.105:8080/stream.ts (电脑打开显示下载0kb)
+手机投屏软件弹出系统提示"使用投屏服务",点确定.
+之后运行到ScreenCaptureManager的mediaProjection = manager.getMediaProjection(resultCode, data); 这行报错:
+Caused by: java.lang.SecurityException: Media projections require a foreground service of type ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+
+---------------------
+
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                "ScreenCast", width, height, dpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                inputSurface, new VirtualDisplay.Callback() {
+                    @Override
+                    public void onPaused() {
+                        super.onPaused();
+                    }
+
+                    @Override
+                    public void onResumed() {
+                        super.onResumed();
+                    }
+
+                    @Override
+                    public void onStopped() {
+                        super.onStopped();
+                    }
+                }, new Handler(new Handler.Callback() {
+                    @Override
+                    public boolean handleMessage(@NonNull Message msg) {
+                        SGDataHelper.getLog().print(msg);
+                        return true;
+                    }
+                })
+            );
+
+上面这段报错:
+2026-09-05 00:52:59.394 15597-15597 ScreenCapture           com.sellgirl.castScreen              E  Encoder init failed
+                                                                                                    java.lang.IllegalStateException: Must register a callback before starting capture, to manage resources in response to MediaProjection states.
+                                                                                                    	at android.media.projection.MediaProjection.createVirtualDisplay(MediaProjection.java:206)
+                                                                                                    	at com.sellgirl.castScreen.android.send.ScreenCaptureManager.startEncoding(ScreenCaptureManager.java:76)
+                                                                                                    	at com.sellgirl.castScreen.android.send.ScreenCaptureManager.onActivityResult(ScreenCaptureManager.java:52)
+                                                                                                    	at com.sellgirl.castScreen.android.AndroidLauncher.onActivityResult(AndroidLauncher.java:111)
+
+new VirtualDisplay.Callback() 和 new Handler(new Handler.Callback() 是我加的, 你之前给的null值, 但我这样改还是不行, 怎么搞?
+-----------
+上面的报错解决了, 也能进frame回调了
+
+
+    public String startStreaming2(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
+        if(!inited) {
+            inited=true;
+            // 1. 创建 HTTP 服务器
+            try {
+                streamServer = new StreamServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+                inited=false;
+                return null;
+            }
+
+            // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
+            muxer = new TSMuxer(streamServer.getOutputStream());
+
+            // 3. 启动屏幕捕获，设置编码回调
+            captureManager = new ScreenCaptureManager();
+            captureManager.setFrameListener((buffer, info) -> {
+                try {
+                    muxer.writeFrame(buffer, info);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            captureManager.requestCapture(activity);
+        }
+
+        // 4. 连接设备并发送投屏指令
+        connect(device, upnpService);
+        String videoUrl="http://" + getLocalIpAddress() + ":8080/stream.ts";
+        try {
+            castVideo(videoUrl, "Screen Mirroring");
+        }catch (Exception e){
+            SGDataHelper.getLog().printException(e,TAG);
+        }
+        return videoUrl;
+    }
+
+上面是我小改动之后的DLNACastManager里面的方法, 成功进入 muxer.writeFrame(buffer, info) 这句, 但是电视上一直显示"为您播放: Test Stream 4KB/S" 显示一会之后就断开了.
+电脑访问 http://192.168.10.105:8080/stream.ts 仍然是0字节.
+现在是什么问题?怎么解决?
+
+1. 我看到serve有收到请求
+2. TSMuxer.writeFrame是有数据(data.length>0)写入. 我已经发现问题了, 你之前给我的TSMuxer是不完整的...根本没有写数据到OutputStream output 这个字段 (我之前让你完善的,你还未搞, extractSPSPPS() writePES()都是空的)
+3. 我用你的快速测试方案, 电脑看到手机内存在"此电脑\WP33 Pro\内部共享存储空间\Pictures\gensin\1.mp4"文件, 但StreamServer的File file = new File("/sdcard/Pictures/gensin/1.mp4") 报文件不存在, 怎么回事?
+是图片文件夹权限问题吗?我加了READ_EXTERNAL_STORAGE权限也不行, 还是说不能用java.io.File这个类?

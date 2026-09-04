@@ -5,6 +5,7 @@ import android.util.Log;
 import com.sellgirl.castScreen.IDLNADeviceCaster;
 import com.sellgirl.castScreen.android.DLNADeviceScanner2;
 import com.sellgirl.castScreen.model.DeviceIp;
+import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import org.jupnp.UpnpService;
 import org.jupnp.controlpoint.ControlPoint;
@@ -30,10 +31,11 @@ import java.net.NetworkInterface;
 
 public class DLNACastManager //implements IDLNADeviceCaster
 {
+    private static final String TAG = "DLNACastManager";
     private RemoteDevice targetDevice;
     private ControlPoint controlPoint;
     private StreamServer streamServer;
-    private ScreenCaptureManager captureManager;
+    public ScreenCaptureManager captureManager;
     private TSMuxer muxer;
 
     private boolean inited=false;
@@ -69,6 +71,43 @@ public class DLNACastManager //implements IDLNADeviceCaster
         castVideo("http://" + getLocalIpAddress() + ":8080/stream.ts", "Screen Mirroring");
     }
 
+    public String startStreaming2(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
+        if(!inited) {
+            inited=true;
+            // 1. 创建 HTTP 服务器
+            try {
+                streamServer = new StreamServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+                inited=false;
+                return null;
+            }
+
+            // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
+            muxer = new TSMuxer(streamServer.getOutputStream());
+
+            // 3. 启动屏幕捕获，设置编码回调
+            captureManager = new ScreenCaptureManager();
+            captureManager.setFrameListener((buffer, info) -> {
+                try {
+                    muxer.writeFrame(buffer, info);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            captureManager.requestCapture(activity);
+        }
+
+        // 4. 连接设备并发送投屏指令
+        connect(device, upnpService);
+        String videoUrl="http://" + getLocalIpAddress() + ":8080/stream.ts";
+        try {
+            castVideo(videoUrl, "Screen Mirroring");
+        }catch (Exception e){
+            SGDataHelper.getLog().printException(e,TAG);
+        }
+        return videoUrl;
+    }
     private void connect(DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
         this.targetDevice = device.getRawDevice();
         this.controlPoint = upnpService.getControlPoint();
@@ -118,6 +157,8 @@ public class DLNACastManager //implements IDLNADeviceCaster
             Log.e("CastManager", "Not connected");
             return;
         }
+
+        SGDataHelper.getLog().print("videoUrl:================"+videoUrl);
 
         // 1. 正确构造 ServiceType（命名空间、类型、版本）
         ServiceType avType = new ServiceType("schemas-upnp-org", "AVTransport", 1);

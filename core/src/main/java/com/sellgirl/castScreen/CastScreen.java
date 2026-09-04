@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
@@ -23,13 +24,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.sellgirl.castScreen.screen.MainMenuScreen;
 import com.sellgirl.castScreen.screen.SignalScreen;
+import com.sellgirl.sgGameHelper.SGFileDownloader;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import java.util.HashSet;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class CastScreen extends Game// extends ApplicationAdapter
+public class CastScreen extends Game implements IKnightSasha // extends ApplicationAdapter
 {
     private SpriteBatch batch;
 //    private Texture image;
@@ -66,6 +69,7 @@ public class CastScreen extends Game// extends ApplicationAdapter
 //            AudioManager.instance=new AudioManager(this);
 //        }
         this.setScreen(new SignalScreen( CastScreen.this));
+        this.setScreen(new MainMenuScreen(this));
     }
 
     private  void initLibGdx(){
@@ -499,4 +503,53 @@ public static String readExCn(){
         this.caster = caster;
     }
 
+    @Override
+    public BitmapFont getFont() {
+        return font;
+    }
+
+    @Override
+    public BitmapFont getFont3(int size) {
+        return null;
+    }
+
+    @Override
+    public Batch getBatch() {
+        return batch;
+    }
+
+    @Override
+    public boolean isShowTouchpad() {
+        return false;
+    }
+
+    @Override
+    public boolean isRelease() {
+        return false;
+    }
+
+    @Override
+    public boolean isHasKeyboard() {
+        return false;
+    }
+
+    @Override
+    public SGFileDownloader getJarDownloader() {
+        return null;
+    }
+
+    @Override
+    public void setJarDownloader(SGFileDownloader d) {
+
+    }
+
+    @Override
+    public boolean isSupportCloudSave() {
+        return false;
+    }
+
+    @Override
+    public boolean isSteam() {
+        return false;
+    }
 }

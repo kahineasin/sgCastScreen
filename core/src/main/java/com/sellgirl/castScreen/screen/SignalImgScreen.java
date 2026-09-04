@@ -11,23 +11,24 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.Constants;
-import com.sellgirl.castScreen.IKnightSasha;
-import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.castScreen.IDLNADeviceScanner;
+import com.sellgirl.castScreen.IKnightSasha;
 import com.sellgirl.castScreen.IOnDeviceScanListener;
 import com.sellgirl.castScreen.Language;
 import com.sellgirl.castScreen.ScreenSetting;
+import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.sgGameHelper.SGGameHelper;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class SignalScreen implements Screen// extends ApplicationAdapter
+public class SignalImgScreen implements Screen// extends ApplicationAdapter
  {
 //    private SpriteBatch batch;
 //    private Texture image;
@@ -46,11 +47,12 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
      private Skin skin;
      private  boolean test=false;
      private AssetManager manager;
-    public SignalScreen(IKnightSasha game){
+    public SignalImgScreen(IKnightSasha game){
         this.game=game;
         create();
     }
     private int cnt=0;
+    private TextField mp4TF;
 //    @Override
     public void create() {
 //        batch = new SpriteBatch();
@@ -74,11 +76,8 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
 //        game.font=MainMenuScreen.getFont2();//刷新新的中文字
 //        game.font=game.getFont2();
 //        game.font.setColor(Color.WHITE);
-
-//        skin = MainMenuScreen.getSkin();
-//        skin = CastScreen.getSkin2(game.font);
-//        skin.add("default",game.font);
         skin = CastScreen.getSkin2(game.getFont());
+
         skin.add("default",game.getFont());
         skin.add("default", CastScreen.getButtonStyle(skin));
         skin.add("default", CastScreen.getLabelStyle(skin));
@@ -122,6 +121,9 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
             }
         }
 
+        mp4TF=new TextField("http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4",skin);
+        mp4TF.setWidth(ScreenSetting.WORLD_WIDTH*0.5f);
+
         IDLNADeviceScanner scanner=game.getScanner();
         if(scanner.getDevice().size!=cnt//&& null!=folder
         ) {
@@ -135,7 +137,8 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
 //                        goToPlayPage(key);
-                        game.getCaster().startCasting(key);
+//                        game.getCaster().startCasting(key);
+                        game.getCaster().startCastingWeb(key,mp4TF.getText());
                     }
                 });
 
@@ -159,7 +162,8 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
 //                        goToPlayPage(key);
-                            game.getCaster().startCasting(device);
+//                            game.getCaster().startCasting(device);
+                            game.getCaster().startCastingWeb(device,mp4TF.getText());
                         }
                     });
                     listTable.add(btn).spaceBottom(buttonSpace);
@@ -190,6 +194,7 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
 //                goToSubscribePage();
 //            }
 //        });
+
         TextButton exitGameBtn = new TextButton(TXT.g("exit"), skin);
         exitGameBtn.addListener(new ClickListener() {
             @Override
@@ -197,6 +202,8 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                 exitGame();
             }
         });
+        table.add(mp4TF).width(ScreenSetting.WORLD_WIDTH*0.5f).spaceBottom(buttonSpace);
+        table.row();
         table.add(scrollPane).spaceBottom(buttonSpace);
         table.row();
 //        table.add(addFolderBtn).spaceBottom(buttonSpace);

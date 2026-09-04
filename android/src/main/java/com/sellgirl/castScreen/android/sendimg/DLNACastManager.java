@@ -28,7 +28,9 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
-
+/**
+ * 投url到电视
+ */
 public class DLNACastManager //implements IDLNADeviceCaster
 {
     private RemoteDevice targetDevice;

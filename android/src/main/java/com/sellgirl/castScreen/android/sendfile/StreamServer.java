@@ -1,22 +1,19 @@
-package com.sellgirl.castScreen.android.send;
-
-import android.os.Environment;
-import android.util.Log;
+package com.sellgirl.castScreen.android.sendfile;
 
 import com.badlogic.gdx.Gdx;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
-import fi.iki.elonen.NanoHTTPD;
-
-//import java.io.File;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import fi.iki.elonen.NanoHTTPD;
+
+//import java.io.File;
 
 public class StreamServer extends NanoHTTPD {
     private static final String TAG = "StreamServer";
@@ -39,34 +36,33 @@ public class StreamServer extends NanoHTTPD {
     public Response serve(IHTTPSession session) {
         SGDataHelper.getLog().print("Request URI: "+session.getUri());
         String uri = session.getUri();
-        if ("/stream.ts".equals(uri)) {
-            Response response = newFixedLengthResponse(Response.Status.OK, "video/mp2t", pis, -1);
-            response.addHeader("Connection", "keep-alive");
-            response.addHeader("Cache-Control", "no-cache");
-            return response;
-        }
-
-//        // 在 serve 中
 //        if ("/stream.ts".equals(uri)) {
-//////            File file = new File("/sdcard/test.mp4");
-//////            File file = new File("/sdcard/Pictures/gensin/1.mp4");
-//
-//        //权限问题?
-////            File picsDir= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-////            File file = new File(picsDir,"gensin/1.mp4");
-//
-//            //成功,文件在"此电脑\WP33 Pro\内部共享存储空间\Android\data\com.sellgirl.castScreen\files\Download\1.mp4"
-//            File file= Gdx.files.external("Download/1.mp4").file();
-//
-//            FileInputStream fis = null;
-//            try {
-//                fis = new FileInputStream(file);
-//            } catch (FileNotFoundException e) {
-//                //throw new RuntimeException(e);
-//                SGDataHelper.getLog().printException(e,TAG);
-//            }
-//            return newChunkedResponse(Response.Status.OK, "video/mp2t", fis);
+//            Response response = newFixedLengthResponse(Response.Status.OK, "video/mp2t", pis, -1);
+//            response.addHeader("Connection", "keep-alive");
+//            response.addHeader("Cache-Control", "no-cache");
+//            return response;
 //        }
+        // 在 serve 中
+        if ("/stream.ts".equals(uri)) {
+////            File file = new File("/sdcard/test.mp4");
+////            File file = new File("/sdcard/Pictures/gensin/1.mp4");
+
+        //权限问题?
+//            File picsDir= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+//            File file = new File(picsDir,"gensin/1.mp4");
+
+            //成功,文件在"此电脑\WP33 Pro\内部共享存储空间\Android\data\com.sellgirl.castScreen\files\Download\1.mp4"
+            File file= Gdx.files.external("Download/1.mp4").file();
+
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                //throw new RuntimeException(e);
+                SGDataHelper.getLog().printException(e,TAG);
+            }
+            return newChunkedResponse(Response.Status.OK, "video/mp2t", fis);
+        }
         return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
     }
 //    @Override
