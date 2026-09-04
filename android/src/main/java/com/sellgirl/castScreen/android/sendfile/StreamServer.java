@@ -1,5 +1,7 @@
 package com.sellgirl.castScreen.android.sendfile;
 
+import android.os.Environment;
+
 import com.badlogic.gdx.Gdx;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 

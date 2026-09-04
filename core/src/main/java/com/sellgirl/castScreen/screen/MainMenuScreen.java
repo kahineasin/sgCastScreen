@@ -353,8 +353,9 @@ public class MainMenuScreen implements Screen {
 //		TextButton optionBtn = new TextButton(TXT.g("game setting"), skin);
 //		TextButton keySettingBtn = new TextButton(TXT.g("key setting"), skin);
         TextButton exitGameBtn = new TextButton(TXT.g("exit game "), skin);
-		TextButton castImgBtn = new TextButton(TXT.g("cast image"), skin);
-        TextButton castDeviceBtn = new TextButton(TXT.g("cast device screen"), skin);
+		TextButton castImgBtn = new TextButton(TXT.g("cast URL"), skin);
+        TextButton castFileBtn = new TextButton(TXT.g("cast FILE"), skin);
+        TextButton castDeviceBtn = new TextButton(TXT.g("cast DEVICE"), skin);
 		if(!game.isRelease()) {
 			gamePadTestBtn = new TextButton(TXT.g("gamepad test"), skin);
 		}
@@ -421,6 +422,13 @@ public class MainMenuScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 goToCastImgScreen();
+            }
+        });
+        castFileBtn.addListener(new ClickListener() {
+
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                goToCastFileScreen();
             }
         });
 
@@ -513,6 +521,8 @@ public class MainMenuScreen implements Screen {
 //		table.row();
 		table.add(castImgBtn).spaceBottom(buttonSpace);
 		table.row();
+        table.add(castFileBtn).spaceBottom(buttonSpace);
+        table.row();
         table.add(castDeviceBtn).spaceBottom(buttonSpace);
         table.row();
 
@@ -957,6 +967,11 @@ public class MainMenuScreen implements Screen {
 
     }
 
+    private void goToCastFileScreen() {
+        game.setScreen(new SignalFileScreen(game));
+        dispose();
+
+    }
     private void goToCastDeviceScreen() {
         game.setScreen(new SignalScreen(game));
         dispose();

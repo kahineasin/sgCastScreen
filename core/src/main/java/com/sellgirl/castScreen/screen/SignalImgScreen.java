@@ -195,7 +195,7 @@ public class SignalImgScreen implements Screen// extends ApplicationAdapter
 //            }
 //        });
 
-        TextButton exitGameBtn = new TextButton(TXT.g("exit"), skin);
+        TextButton exitGameBtn = new TextButton(TXT.g("back"), skin);
         exitGameBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -367,8 +367,9 @@ private void exitGame() {
 
 //		screen.dispose();
 ////		PauseScreen.this.dispose();
+    game.setScreen(new MainMenuScreen(game));
     dispose();
     //game.dispose();
-    Gdx.app.exit();
+//    Gdx.app.exit();
 }
 }

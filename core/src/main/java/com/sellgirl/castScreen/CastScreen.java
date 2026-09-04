@@ -68,7 +68,7 @@ public class CastScreen extends Game implements IKnightSasha // extends Applicat
 //        if(null==AudioManager.instance){
 //            AudioManager.instance=new AudioManager(this);
 //        }
-        this.setScreen(new SignalScreen( CastScreen.this));
+//        this.setScreen(new SignalScreen( CastScreen.this));
         this.setScreen(new MainMenuScreen(this));
     }
 

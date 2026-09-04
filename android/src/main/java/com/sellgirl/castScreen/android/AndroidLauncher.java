@@ -117,6 +117,7 @@ protected DLNADeviceScanner2 scanner;
 //    private DLNADeviceScanner scanner;
     private DLNACastManager castManager;
     private com.sellgirl.castScreen.android.send.DLNACastManager castManager3;
+    private com.sellgirl.castScreen.android.sendfile.DLNACastManager castManager4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,6 +153,7 @@ protected DLNADeviceScanner2 scanner;
 
         castManager = new DLNACastManager();
         castManager3 = new com.sellgirl.castScreen.android.send.DLNACastManager();
+        castManager4 = new com.sellgirl.castScreen.android.sendfile.DLNACastManager();
         game.setCaster(new IDLNADeviceCaster() {
             @Override
             // 用户选择设备后调用
@@ -212,6 +214,51 @@ protected DLNADeviceScanner2 scanner;
                         castManager2.play();
                     }
                 }
+            }
+
+            @Override
+            public void startCastingFile(DeviceIp ip, String path) {
+
+                UpnpService upnpService=scanner.getUpnpService();
+                DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
+
+
+//                castManager.startStreaming(AndroidLauncher.this, device, upnpService);
+//                castManager.startStreaming2(AndroidLauncher.this, device, upnpService);
+                try {
+                    String videoUrl=castManager4.startStreaming2(AndroidLauncher.this, device, upnpService);
+                    new Thread(() -> {
+
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        String location=ip.location;
+                        if (location != null && castManager2.loadDevice(location)) {
+                            // 投屏测试
+////                String videoUrl = "http://你的手机IP:8080/stream.ts"; // 先填一个测试视频 URL
+//                    String videoUrl="http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4";
+//                            String videoUrl=webUrl;
+                            if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+                                castManager2.play();
+                            }
+                        }
+//                        if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+//                            castManager2.play();
+//                        }
+                    }).start();
+
+                }catch (Exception e){
+                    SGDataHelper.getLog().printException(e,TAG);
+                }
+//                // 打印设备名称和服务信息
+//                Log.d(TAG, "Device: " + device.getFriendlyName());
+//                for (Service service : device.getRawDevice().getServices()) {
+//                    ServiceType type = service.getServiceType();
+//                    Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+//                    Log.d(TAG, "  url: "+device.getLocation());
+//                }
             }
         });
 

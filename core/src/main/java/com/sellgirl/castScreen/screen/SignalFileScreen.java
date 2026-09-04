@@ -17,17 +17,17 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.Constants;
-import com.sellgirl.castScreen.IKnightSasha;
-import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.castScreen.IDLNADeviceScanner;
+import com.sellgirl.castScreen.IKnightSasha;
 import com.sellgirl.castScreen.IOnDeviceScanListener;
 import com.sellgirl.castScreen.Language;
 import com.sellgirl.castScreen.ScreenSetting;
+import com.sellgirl.castScreen.model.DeviceIp;
 import com.sellgirl.sgGameHelper.SGGameHelper;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class SignalScreen implements Screen// extends ApplicationAdapter
+public class SignalFileScreen implements Screen// extends ApplicationAdapter
  {
 //    private SpriteBatch batch;
 //    private Texture image;
@@ -46,7 +46,7 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
      private Skin skin;
      private  boolean test=false;
      private AssetManager manager;
-    public SignalScreen(IKnightSasha game){
+    public SignalFileScreen(IKnightSasha game){
         this.game=game;
         create();
     }
@@ -135,7 +135,8 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
 //                        goToPlayPage(key);
-                        game.getCaster().startCasting(key);
+//                        game.getCaster().startCasting(key);
+                        game.getCaster().startCastingFile(key,"/sdcard/Pictures/gensin/1.mp4");
                     }
                 });
 
@@ -159,7 +160,7 @@ public class SignalScreen implements Screen// extends ApplicationAdapter
                         @Override
                         public void clicked(InputEvent event, float x, float y) {
 //                        goToPlayPage(key);
-                            game.getCaster().startCasting(device);
+                            game.getCaster().startCastingFile(device,"/sdcard/Pictures/gensin/1.mp4");
                         }
                     });
                     listTable.add(btn).spaceBottom(buttonSpace);
@@ -362,7 +363,7 @@ private void exitGame() {
 ////		PauseScreen.this.dispose();
     game.setScreen(new MainMenuScreen(game));
     dispose();
-    //game.dispose();
+//    //game.dispose();
 //    Gdx.app.exit();
 }
 }
