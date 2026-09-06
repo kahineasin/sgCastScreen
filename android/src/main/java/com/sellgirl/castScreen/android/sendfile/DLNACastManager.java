@@ -34,7 +34,7 @@ public class DLNACastManager //implements IDLNADeviceCaster
     private static final String TAG = "DLNACastManager";
     private RemoteDevice targetDevice;
     private ControlPoint controlPoint;
-    private StreamServer streamServer;
+    public StreamServer streamServer;
     public ScreenCaptureManager captureManager;
     private TSMuxer2 muxer;
 
@@ -86,26 +86,26 @@ public class DLNACastManager //implements IDLNADeviceCaster
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
             muxer = new TSMuxer2(streamServer.getOutputStream());
 
-            // 3. 启动屏幕捕获，设置编码回调
-            captureManager = new ScreenCaptureManager();
-            captureManager.setFrameListener((buffer, info) -> {
-                try {
-                    muxer.writeFrame(buffer, info);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            captureManager.requestCapture(activity);
+//            // 3. 启动屏幕捕获，设置编码回调
+//            captureManager = new ScreenCaptureManager();
+//            captureManager.setFrameListener((buffer, info) -> {
+//                try {
+//                    muxer.writeFrame(buffer, info);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//            captureManager.requestCapture(activity);
         }
 
-        // 4. 连接设备并发送投屏指令
-        connect(device, upnpService);
+//        // 4. 连接设备并发送投屏指令
+//        connect(device, upnpService);
         String videoUrl="http://" + getLocalIpAddress() + ":8080/stream.ts";
-        try {
-            castVideo(videoUrl, "Screen Mirroring");
-        }catch (Exception e){
-            SGDataHelper.getLog().printException(e,TAG);
-        }
+//        try {
+//            castVideo(videoUrl, "Screen Mirroring");
+//        }catch (Exception e){
+//            SGDataHelper.getLog().printException(e,TAG);
+//        }
         return videoUrl;
     }
     private void connect(DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {

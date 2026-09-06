@@ -1,14 +1,18 @@
 package com.sellgirl.castScreen.android.sendfile;
 
+import android.net.Uri;
 import android.os.Environment;
 
 import com.badlogic.gdx.Gdx;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
+import org.jupnp.util.MimeType;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
@@ -22,6 +26,9 @@ public class StreamServer extends NanoHTTPD {
     private PipedOutputStream pos;
     private PipedInputStream pis;
     private boolean streaming = false;
+    public File file=null;
+    public Uri uri=null;
+    public InputStream inputStream=null;
 
     public StreamServer() throws IOException {
         super(8080);
@@ -45,25 +52,27 @@ public class StreamServer extends NanoHTTPD {
 //            return response;
 //        }
         // 在 serve 中
-        if ("/stream.ts".equals(uri)) {
+        if ("/stream.ts".equals(uri)&&null!=inputStream) {
 ////            File file = new File("/sdcard/test.mp4");
 ////            File file = new File("/sdcard/Pictures/gensin/1.mp4");
 
         //权限问题?
-//            File picsDir= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-//            File file = new File(picsDir,"gensin/1.mp4");
+////            File picsDir= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+////            File file = new File(picsDir,"gensin/1.mp4");
 
-            //成功,文件在"此电脑\WP33 Pro\内部共享存储空间\Android\data\com.sellgirl.castScreen\files\Download\1.mp4"
-            File file= Gdx.files.external("Download/1.mp4").file();
+//            //成功,文件在"此电脑\WP33 Pro\内部共享存储空间\Android\data\com.sellgirl.castScreen\files\Download\1.mp4"
+//            File file= Gdx.files.external("Download/1.mp4").file();
 
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
-            } catch (FileNotFoundException e) {
-                //throw new RuntimeException(e);
-                SGDataHelper.getLog().printException(e,TAG);
-            }
-            return newChunkedResponse(Response.Status.OK, "video/mp2t", fis);
+//            FileInputStream fis = null;
+//            try {
+//                fis = new FileInputStream(file);
+//            } catch (FileNotFoundException e) {
+//                //throw new RuntimeException(e);
+//                SGDataHelper.getLog().printException(e,TAG);
+//            }
+            return newChunkedResponse(Response.Status.OK, "video/mp2t", inputStream);
+
+//            return newChunkedResponse(Response.Status.OK, "image/jpeg", inputStream);
         }
         return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
     }

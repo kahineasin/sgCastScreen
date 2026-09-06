@@ -121,7 +121,10 @@ public class SignalImgScreen implements Screen// extends ApplicationAdapter
             }
         }
 
-        mp4TF=new TextField("http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4",skin);
+        mp4TF=new TextField(
+//            "http://mp3.sellgirl.com/img/web_sasha_1920x1080_02.jpg"
+            "http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4"
+            ,skin);
         mp4TF.setWidth(ScreenSetting.WORLD_WIDTH*0.5f);
 
         IDLNADeviceScanner scanner=game.getScanner();
