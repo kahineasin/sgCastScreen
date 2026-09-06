@@ -22,17 +22,25 @@ public class StreamServer extends NanoHTTPD {
     private static final String TAG = "StreamServer";
     private PipedOutputStream pos;
     private PipedInputStream pis;
+    private StreamBroadcaster broadcaster;
     private boolean streaming = false;
-
     public StreamServer() throws IOException {
         super(8080);
+        // 创建管道
         pos = new PipedOutputStream();
-        pis = new PipedInputStream(pos);
+        pis = new PipedInputStream(pos, 1024 * 1024); // 1MB 缓冲区
+        broadcaster = new StreamBroadcaster();
         start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
     }
 
-    public OutputStream getOutputStream() {
+    // 供 TSMuxer 写入数据
+    @Deprecated
+    public PipedOutputStream getOutputStream() {
         return pos;
+    }
+
+    public StreamBroadcaster getBroadcaster() {
+        return broadcaster;
     }
 
 //    @Override
@@ -70,27 +78,62 @@ public class StreamServer extends NanoHTTPD {
 ////        }
 //        return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
 //    }
-    @Override
-    public Response serve(IHTTPSession session) {
-        String uri = session.getUri();
-        Log.d(TAG, "Request: " + uri);
+//    @Override
+//    public Response serve(IHTTPSession session) {
+//        String uri = session.getUri();
+//        Log.d(TAG, "Request: " + uri);
+//
+//        if ("/stream.ts".equals(uri)) {
+//            // 从你的输出流（PipedOutputStream）创建 InputStream
+//            // 假设你有一个 PipedInputStream 连接到 TSMuxer 的输出
+//            // 如果 TSMuxer 直接写入 streamServer.getOutputStream()，那需要改设计
+//            // 更稳健：用 PipedInputStream/PipedOutputStream
+////            InputStream is = new PipedInputStream() /* 需连接到你写入数据的流 */;
+//            Response response = newChunkedResponse(Response.Status.OK, "video/mp2t", pis);
+//            response.addHeader("Connection", "keep-alive");
+////            response.addHeader("Cache-Control", "no-cache");
+//            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+//            return response;
+//        }
+//        return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+//    }
 
-        if ("/stream.ts".equals(uri)) {
-            // 从你的输出流（PipedOutputStream）创建 InputStream
-            // 假设你有一个 PipedInputStream 连接到 TSMuxer 的输出
-            // 如果 TSMuxer 直接写入 streamServer.getOutputStream()，那需要改设计
-            // 更稳健：用 PipedInputStream/PipedOutputStream
-//            InputStream is = new PipedInputStream() /* 需连接到你写入数据的流 */;
+
+@Override
+public Response serve(IHTTPSession session) {
+    String uri = session.getUri();
+    if ("/stream.ts".equals(uri)) {
+        try {
+            // 为这个请求创建一个全新的管道对
+            PipedOutputStream pos = new PipedOutputStream();
+            PipedInputStream pis = new PipedInputStream(pos, 1024 * 1024); // 1MB 缓冲
+
+            // 将这个客户端的输出流加入广播器
+            broadcaster.addClient(pos);
+
+            // 返回分块响应
             Response response = newChunkedResponse(Response.Status.OK, "video/mp2t", pis);
             response.addHeader("Connection", "keep-alive");
-            response.addHeader("Cache-Control", "no-cache");
+            response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             return response;
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to create pipe", e);
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Pipe creation failed");
         }
-        return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
     }
+    return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "Not Found");
+}
     public void stopServer() {
-        try { pos.close(); } catch (Exception e) {}
-        try { pis.close(); } catch (Exception e) {}
+        try {
+            if (pos != null) pos.close();
+        } catch (IOException e) { /* ignore */ }
+        try {
+            if (pis != null) pis.close();
+        } catch (IOException e) { /* ignore */ }
+
+        if (broadcaster != null) {
+            broadcaster.closeAll();
+        }
         stop();
     }
 }

@@ -167,6 +167,7 @@ protected DLNADeviceScanner2 scanner;
 //                castManager.startStreaming2(AndroidLauncher.this, device, upnpService);
                 try {
                     String videoUrl=castManager3.startStreaming2(AndroidLauncher.this, device, upnpService);
+                    //if(true){return;}//todo 先用浏览器测试,通过再用电视
                     new Thread(() -> {
 
                         try {
@@ -304,6 +305,7 @@ protected DLNADeviceScanner2 scanner;
         super.onDestroy();
         if (scanner != null) {scanner.stopScan();}
         if (castManager != null) {castManager.stopStreaming();}
+        if (castManager3 != null) {castManager3.stopStreaming();}
     }
 //    public static class DLNACaster implements IDLNADeviceCaster {
 //        protected DLNADeviceScanner2 scanner;

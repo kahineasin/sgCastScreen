@@ -6,6 +6,7 @@ import com.sellgirl.castScreen.android.DLNADeviceScanner2;
 import com.sellgirl.castScreen.android.send.ScreenCaptureManager;
 //import com.sellgirl.castScreen.android.send.StreamServer;
 import com.sellgirl.castScreen.android.send.TSMuxer;
+import com.sellgirl.castScreen.android.send.TSMuxer2;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import org.jupnp.UpnpService;
@@ -35,40 +36,40 @@ public class DLNACastManager //implements IDLNADeviceCaster
     private ControlPoint controlPoint;
     private StreamServer streamServer;
     public ScreenCaptureManager captureManager;
-    private TSMuxer muxer;
+    private TSMuxer2 muxer;
 
     private boolean inited=false;
-    public void startStreaming(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
-        if(!inited) {
-            inited=true;
-            // 1. 创建 HTTP 服务器
-            try {
-                streamServer = new StreamServer();
-            } catch (IOException e) {
-                e.printStackTrace();
-                inited=false;
-                return;
-            }
-
-            // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer(streamServer.getOutputStream());
-
-            // 3. 启动屏幕捕获，设置编码回调
-            captureManager = new ScreenCaptureManager();
-            captureManager.setFrameListener((buffer, info) -> {
-                try {
-                    muxer.writeFrame(buffer, info);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-            captureManager.requestCapture(activity);
-        }
-
-        // 4. 连接设备并发送投屏指令
-        connect(device, upnpService);
-        castVideo("http://" + getLocalIpAddress() + ":8080/stream.ts", "Screen Mirroring");
-    }
+//    public void startStreaming(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
+//        if(!inited) {
+//            inited=true;
+//            // 1. 创建 HTTP 服务器
+//            try {
+//                streamServer = new StreamServer();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                inited=false;
+//                return;
+//            }
+//
+//            // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
+//            muxer = new TSMuxer(streamServer.getOutputStream());
+//
+//            // 3. 启动屏幕捕获，设置编码回调
+//            captureManager = new ScreenCaptureManager();
+//            captureManager.setFrameListener((buffer, info) -> {
+//                try {
+//                    muxer.writeFrame(buffer, info);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//            captureManager.requestCapture(activity);
+//        }
+//
+//        // 4. 连接设备并发送投屏指令
+//        connect(device, upnpService);
+//        castVideo("http://" + getLocalIpAddress() + ":8080/stream.ts", "Screen Mirroring");
+//    }
 
     public String startStreaming2(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
         if(!inited) {
@@ -83,7 +84,7 @@ public class DLNACastManager //implements IDLNADeviceCaster
             }
 
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer(streamServer.getOutputStream());
+            muxer = new TSMuxer2(streamServer.getOutputStream());
 
             // 3. 启动屏幕捕获，设置编码回调
             captureManager = new ScreenCaptureManager();

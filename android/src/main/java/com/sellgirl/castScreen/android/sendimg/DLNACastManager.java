@@ -6,6 +6,7 @@ import com.sellgirl.castScreen.android.DLNADeviceScanner2;
 import com.sellgirl.castScreen.android.send.ScreenCaptureManager;
 import com.sellgirl.castScreen.android.send.TSMuxer;
 //import com.sellgirl.castScreen.android.send.StreamServer;
+import com.sellgirl.castScreen.android.send.TSMuxer2;
 import com.sellgirl.castScreen.android.sendimg.StreamServer;
 
 import org.jupnp.UpnpService;
@@ -37,7 +38,7 @@ public class DLNACastManager //implements IDLNADeviceCaster
     private ControlPoint controlPoint;
     private StreamServer streamServer;
     private ScreenCaptureManager captureManager;
-    private TSMuxer muxer;
+    private TSMuxer2 muxer;
 
     private boolean inited=false;
     public void startStreaming(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
@@ -53,7 +54,7 @@ public class DLNACastManager //implements IDLNADeviceCaster
             }
 
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer(streamServer.getOutputStream());
+            muxer = new TSMuxer2(streamServer.getOutputStream());
 
             // 3. 启动屏幕捕获，设置编码回调
             captureManager = new ScreenCaptureManager();

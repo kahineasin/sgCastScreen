@@ -28,7 +28,9 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 
 
-
+/**
+ * 投手机屏幕
+ */
 public class DLNACastManager //implements IDLNADeviceCaster
 {
     private static final String TAG = "DLNACastManager";
@@ -52,7 +54,8 @@ public class DLNACastManager //implements IDLNADeviceCaster
             }
 
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer(streamServer.getOutputStream());
+//            muxer = new TSMuxer(streamServer.getOutputStream());
+            muxer = new TSMuxer(streamServer.getBroadcaster());
 
             // 3. 启动屏幕捕获，设置编码回调
             captureManager = new ScreenCaptureManager();
@@ -84,7 +87,8 @@ public class DLNACastManager //implements IDLNADeviceCaster
             }
 
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer(streamServer.getOutputStream());
+//            muxer = new TSMuxer(streamServer.getOutputStream());
+            muxer = new TSMuxer(streamServer.getBroadcaster());
 
             // 3. 启动屏幕捕获，设置编码回调
             captureManager = new ScreenCaptureManager();
@@ -101,11 +105,11 @@ public class DLNACastManager //implements IDLNADeviceCaster
         // 4. 连接设备并发送投屏指令
         connect(device, upnpService);
         String videoUrl="http://" + getLocalIpAddress() + ":8080/stream.ts";
-        try {
-            castVideo(videoUrl, "Screen Mirroring");
-        }catch (Exception e){
-            SGDataHelper.getLog().printException(e,TAG);
-        }
+//        try {
+//            castVideo(videoUrl, "Screen Mirroring");
+//        }catch (Exception e){
+//            SGDataHelper.getLog().printException(e,TAG);
+//        }
         return videoUrl;
     }
     private void connect(DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
@@ -252,6 +256,14 @@ public class DLNACastManager //implements IDLNADeviceCaster
     public void stopStreaming() {
         if (captureManager != null) captureManager.stopStreaming();
         if (streamServer != null) streamServer.stopServer();
+        if (muxer != null) {
+            try {
+                muxer.close();
+            } catch (IOException e) {
+//                throw new RuntimeException(e);
+                SGDataHelper.getLog().printException(e,TAG);
+            }
+        }
     }
 
 //    // 用户选择设备后调用

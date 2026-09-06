@@ -1,11 +1,15 @@
 package com.sellgirl.castScreen.android.send;
+
 import android.media.MediaCodec;
 import android.util.Log;
+
+import com.sellgirl.sgJavaHelper.config.SGDataHelper;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public class TSMuxer {
+public class TSMuxer3 {
     private static final String TAG = "TSMuxer";
     private static final int TS_PACKET_SIZE = 188;
     private static final int PAT_PID = 0x0000;
@@ -13,92 +17,98 @@ public class TSMuxer {
     private static final int VIDEO_PID = 0x0100;
     private static final int PCR_PID = VIDEO_PID;
 
+    private OutputStream output;
     // ... 常量定义保持不变
     private StreamBroadcaster broadcaster; // 替换掉 OutputStream
     private int packetCounter = 0;
     private byte[] sps = null;
     private byte[] pps = null;
     private boolean firstFrame = true;
+    private long ptsBase = System.currentTimeMillis() * 90; // 90kHz 基准
 
-    // 每个 PID 的连续性计数器
-    private int continuityCounterPAT = 0;
-    private int continuityCounterPMT = 0;
-    private int continuityCounterVideo = 0;
-
-    public TSMuxer(StreamBroadcaster broadcaster) {
+    @Deprecated
+    public TSMuxer3(OutputStream output) {
+        this.output = output;
+    }
+    public TSMuxer3(StreamBroadcaster broadcaster) {
         this.broadcaster = broadcaster;
     }
-
+    // 在 writeFrame 开头添加计数器
+    private int frameCount = 0;
     /**
-     * 写入一帧 H.264 数据（必须包含起始码 00 00 00 01 或 00 00 01）
-     * @param buffer 包含帧数据的 ByteBuffer
-     * @param info   MediaCodec.BufferInfo，用于判断关键帧
+     * 传入一帧 H.264 数据（必须包含起始码 00 00 00 01 或 00 00 01）
      */
     public void writeFrame(ByteBuffer buffer, MediaCodec.BufferInfo info) throws IOException {
-        byte[] data = new byte[info.size];
-        buffer.get(data);
+        if(hasErr){return;}
+        try {
 
-        // 1. 提取 SPS/PPS（如果尚未提取）
-        if (sps == null || pps == null) {
-            extractSPSPPS(data);
-            if (sps != null && pps != null) {
-                Log.d(TAG, "SPS/PPS extracted: sps=" + sps.length + ", pps=" + pps.length);
+            frameCount++;
+            if (frameCount % 30 == 0) { // 每30帧打印一次
+                Log.d(TAG, "Frame " + frameCount + ", size=" + info.size + ", flags=" + info.flags);
             }
-        }
 
-        // 如果没有 SPS/PPS，无法解码，跳过该帧
-        if (sps == null || pps == null) {
-            return;
-        }
+            byte[] data = new byte[info.size];
+            buffer.get(data);
 
-        // 2. 判断是否为关键帧（IDR）
-        boolean isKeyFrame = (info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0;
+            // 尝试提取 SPS/PPS（从关键帧中）
+            if (sps == null || pps == null) {
+                extractSPSPPS(data);
+                if (sps != null && pps != null) {
+                    Log.d(TAG, "SPS/PPS extracted: sps=" + sps.length + ", pps=" + pps.length);
+                }
+            }
 
-        // 3. 如果是关键帧，先发送 SPS/PPS（确保解码器收到参数集）
-        if (isKeyFrame || firstFrame) {
-            // 组合 SPS + PPS 作为单独的数据块
-            byte[] spsPpsData = new byte[sps.length + pps.length];
-            System.arraycopy(sps, 0, spsPpsData, 0, sps.length);
-            System.arraycopy(pps, 0, spsPpsData, sps.length, pps.length);
-            // 发送配置帧（不带 PTS/DTS）
-            writePES(spsPpsData, 0, spsPpsData.length, true);
-        }
+            // 如果还没有 SPS/PPS，跳过该帧（无法解码）
+            if (sps == null || pps == null) {
+                // 如果是关键帧但没有 SPS/PPS，可能是帧格式问题，尝试继续
+                return;
+            }
 
-        // 4. 发送视频帧数据
-        writePES(data, 0, data.length, false);
+            // 第一帧先发送 PAT/PMT
+            if (firstFrame) {
+                writePAT();
+                writePMT();
+                firstFrame = false;
+            }
 
-        // 5. 发送 PAT/PMT（第一帧 + 定期）
-        if (firstFrame) {
-            writePAT();
-            writePMT();
-            firstFrame = false;
-        }
-        if (++packetCounter % 30 == 0) {
-            writePAT();
-            writePMT();
+            // 封装 PES 并输出
+            writePES(data, 0, data.length);
+
+            // 每 100 个 TS 包重发 PAT/PMT（保持兼容）
+            if (++packetCounter % 100 == 0) {
+                writePAT();
+                writePMT();
+            }
+        }catch (Exception e){
+            SGDataHelper.getLog().printException(e,TAG);
+            hasErr=true;
         }
     }
-
+    private boolean hasErr=false;
     private void writePAT() throws IOException {
         byte[] pat = new byte[TS_PACKET_SIZE];
-        pat[0] = 0x47;
+        pat[0] = 0x47; // sync byte
         pat[1] = (byte) (0x40 | (PAT_PID >> 8));
         pat[2] = (byte) (PAT_PID & 0xFF);
-        pat[3] = (byte) (0x10 | (continuityCounterPAT & 0x0F));
-        continuityCounterPAT = (continuityCounterPAT + 1) & 0x0F;
-
+        pat[3] = (byte) 0x10; // payload unit start indicator
         pat[4] = 0x00; // pointer_field
         int offset = 5;
-        pat[offset++] = 0x00; // table_id
+        // table_id = 0x00
+        pat[offset++] = 0x00;
+        // section_syntax_indicator=1, private_indicator=0, section_length=13
         pat[offset++] = (byte) 0xB0;
-        pat[offset++] = 0x0D; // section_length = 13
+        pat[offset++] = 0x0D;
+        // transport_stream_id = 1
         pat[offset++] = 0x00;
         pat[offset++] = 0x01;
+        // version_number=0, current_next_indicator=1
         pat[offset++] = (byte) 0xC1;
-        pat[offset++] = 0x00;
-        pat[offset++] = 0x00;
+        pat[offset++] = 0x00; // section_number
+        pat[offset++] = 0x00; // last_section_number
+        // program_number = 1
         pat[offset++] = 0x00;
         pat[offset++] = 0x01;
+        // program_map_PID = PMT_PID
         pat[offset++] = (byte) (0xE0 | (PMT_PID >> 8));
         pat[offset++] = (byte) (PMT_PID & 0xFF);
         // CRC32 (dummy)
@@ -106,6 +116,8 @@ public class TSMuxer {
         pat[offset++] = 0x00;
         pat[offset++] = 0x00;
         pat[offset++] = 0x00;
+//        output.write(pat);
+//        broadcaster.broadcast(ts, 0, TS_PACKET_SIZE);
         broadcaster.broadcast(pat, 0, pat.length);
     }
 
@@ -114,26 +126,32 @@ public class TSMuxer {
         pmt[0] = 0x47;
         pmt[1] = (byte) (0x40 | (PMT_PID >> 8));
         pmt[2] = (byte) (PMT_PID & 0xFF);
-        pmt[3] = (byte) (0x10 | (continuityCounterPMT & 0x0F));
-        continuityCounterPMT = (continuityCounterPMT + 1) & 0x0F;
-
+        pmt[3] = (byte) 0x10;
         pmt[4] = 0x00;
         int offset = 5;
+        // table_id = 0x02
         pmt[offset++] = 0x02;
+        // section_syntax_indicator=1, private_indicator=0, section_length=18
         pmt[offset++] = (byte) 0xB0;
-        pmt[offset++] = 0x12; // section_length = 18
+        pmt[offset++] = 0x12;
+        // program_number = 1
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x01;
+        // version_number=0, current_next=1
         pmt[offset++] = (byte) 0xC1;
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x00;
+        // PCR PID
         pmt[offset++] = (byte) (0xE0 | (PCR_PID >> 8));
         pmt[offset++] = (byte) (PCR_PID & 0xFF);
+        // program_info_length = 0
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x00;
-        pmt[offset++] = 0x1B; // H.264 stream_type
+        // 流1: H.264 video
+        pmt[offset++] = 0x1B; // stream_type H.264
         pmt[offset++] = (byte) (0xE0 | (VIDEO_PID >> 8));
         pmt[offset++] = (byte) (VIDEO_PID & 0xFF);
+        // ES_info_length = 0
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x00;
         // CRC32 dummy
@@ -141,77 +159,58 @@ public class TSMuxer {
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x00;
         pmt[offset++] = 0x00;
+//        output.write(pmt);
         broadcaster.broadcast(pmt, 0, pmt.length);
     }
 
-    /**
-     * 将数据封装为 PES 并打包成 TS 包
-     * @param data    数据（NAL 单元或组合）
-     * @param offset  偏移
-     * @param length  长度
-     * @param isConfig 是否为配置帧（SPS/PPS），如果是则不添加 PTS/DTS
-     */
-    private void writePES(byte[] data, int offset, int length, boolean isConfig) throws IOException {
-        int pesHeaderLen = isConfig ? 9 : 14; // 配置帧不需要 PTS/DTS，只需 9 字节头
-        int pesLen = length + pesHeaderLen;
+    private void writePES(byte[] frameData, int offset, int length) throws IOException {
+        int pesLen = length + 14; // PES header size (13 bytes + 1 padding? 实际是14)
         byte[] pes = new byte[pesLen];
-
         // 起始码
         pes[0] = 0x00;
         pes[1] = 0x00;
         pes[2] = 0x01;
         pes[3] = (byte) 0xE0; // stream_id = video
-        // PES 包长度
-        int packetLength = length + (isConfig ? 3 : 9); // 除去 PTS/DTS 字段
-        pes[4] = (byte) (packetLength >> 8);
-        pes[5] = (byte) (packetLength & 0xFF);
+        // PES 包长度 (length + 9)
+        int pesPacketLength = length + 9;
+        pes[4] = (byte) (pesPacketLength >> 8);
+        pes[5] = (byte) (pesPacketLength & 0xFF);
+        // 标志位 (PTS/DTS present)
+        pes[6] = (byte) 0x80;
+        pes[7] = (byte) 0x80;
+        pes[8] = (byte) 0x05; // PES header data length = 5 bytes
+        // 计算时间戳（简单递增）
+        long ptsVal = (System.currentTimeMillis() * 90) % 0x1FFFFFFFFL;
+        pes[9]  = (byte) (0x20 | ((ptsVal >> 29) & 0x07));
+        pes[10] = (byte) ((ptsVal >> 22) & 0xFF);
+        pes[11] = (byte) (0x80 | ((ptsVal >> 14) & 0xFF));
+        pes[12] = (byte) ((ptsVal >> 7) & 0xFF);
+        pes[13] = (byte) (0x80 | (ptsVal & 0x7F));
+        // 拷贝视频数据
+        System.arraycopy(frameData, offset, pes, 14, length);
 
-        if (isConfig) {
-            // 配置帧：仅包含固定标志
-            pes[6] = 0x00; // 无 PTS/DTS
-            pes[7] = 0x00;
-            pes[8] = 0x00; // PES header data length = 0
-        } else {
-            // 视频帧：包含 PTS/DTS
-            pes[6] = (byte) 0x80; // PTS/DTS present
-            pes[7] = (byte) 0x80;
-            pes[8] = (byte) 0x05; // PES header data length = 5
-            // 计算 PTS（基于系统时间）
-            long ptsVal = (System.currentTimeMillis() * 90) % 0x1FFFFFFFFL;
-            pes[9]  = (byte) (0x20 | ((ptsVal >> 29) & 0x07));
-            pes[10] = (byte) ((ptsVal >> 22) & 0xFF);
-            pes[11] = (byte) (0x80 | ((ptsVal >> 14) & 0xFF));
-            pes[12] = (byte) ((ptsVal >> 7) & 0xFF);
-            pes[13] = (byte) (0x80 | (ptsVal & 0x7F));
-        }
-
-        // 拷贝数据
-        System.arraycopy(data, offset, pes, isConfig ? 9 : 14, length);
-
-        // 打包为 TS 包
+        // 将 PES 包拆分为 TS 包（每个 TS 包 188 字节）
         int packetIndex = 0;
-        boolean isFirst = true;
         while (packetIndex < pes.length) {
             byte[] ts = new byte[TS_PACKET_SIZE];
             ts[0] = 0x47;
             ts[1] = (byte) (0x40 | (VIDEO_PID >> 8));
             ts[2] = (byte) (VIDEO_PID & 0xFF);
-            ts[3] = (byte) (0x10 | (isFirst ? 0x20 : 0x00) | (continuityCounterVideo & 0x0F));
-            continuityCounterVideo = (continuityCounterVideo + 1) & 0x0F;
-            isFirst = false;
-
+            ts[3] = (byte) (0x10 | (packetIndex == 0 ? 0x20 : 0x00)); // payload start indicator
             int payloadSize = Math.min(TS_PACKET_SIZE - 4, pes.length - packetIndex);
             System.arraycopy(pes, packetIndex, ts, 4, payloadSize);
-            // 填充 0xFF
+            // 剩余填充 0xFF
             for (int i = 4 + payloadSize; i < TS_PACKET_SIZE; i++) {
                 ts[i] = (byte) 0xFF;
             }
+//            output.write(ts);
             broadcaster.broadcast(ts, 0, TS_PACKET_SIZE);
             packetIndex += payloadSize;
         }
     }
 
     private void extractSPSPPS(byte[] data) {
+        // 查找 NAL 起始码
         for (int i = 0; i < data.length - 4; i++) {
             if (data[i] == 0 && data[i+1] == 0 && data[i+2] == 0 && data[i+3] == 1) {
                 int nalType = data[i+4] & 0x1F;
@@ -241,6 +240,6 @@ public class TSMuxer {
     }
 
     public void close() throws IOException {
-        broadcaster.closeAll();
+        output.close();
     }
 }

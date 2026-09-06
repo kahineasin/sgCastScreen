@@ -223,3 +223,182 @@ new VirtualDisplay.Callback() 和 new Handler(new Handler.Callback() 是我加�
 2. TSMuxer.writeFrame是有数据(data.length>0)写入. 我已经发现问题了, 你之前给我的TSMuxer是不完整的...根本没有写数据到OutputStream output 这个字段 (我之前让你完善的,你还未搞, extractSPSPPS() writePES()都是空的)
 3. 我用你的快速测试方案, 电脑看到手机内存在"此电脑\WP33 Pro\内部共享存储空间\Pictures\gensin\1.mp4"文件, 但StreamServer的File file = new File("/sdcard/Pictures/gensin/1.mp4") 报文件不存在, 怎么回事?
 是图片文件夹权限问题吗?我加了READ_EXTERNAL_STORAGE权限也不行, 还是说不能用java.io.File这个类?
+
+-------测试ts-----------
+1. vlc播放器地址是 https://github.com/videolan/vlc 吗?
+2. 我安装后运行, 看到插件里面已经包含"TS muxer (libdvbpsi)", 是不是就说明可以播放ts?
+3. 我装的vlc能播放http://mp3.sellgirl.com/mp3/v/5.deemo_lv10.mp4 但无法播放 http://192.168.10.105:8080/stream.ts , 报错提示查看日志, 但是:
+    a. 我找不到日志的位置...
+    b. 你能不能给我提供一个能播放的 http://xxx/xxx.ts ? 因为不一定是vlc的问题, 可能是我的投屏软件生成的ts本身有问题
+
+1. 你给的 https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8 和 https://samplefile.com/samples/download/video/ts/ts_60s_sample_file_3.9MB.ts , 在我安装的vlc中都能正常播放. 所以是投屏程序生成的ts有问题?
+2. 发现一个现象, 电脑浏览器打开 http://192.168.10.105:8080/stream.ts , 开始一直是下载状态, 但大概十多秒之后就会停掉, 显示"网络错误", 投屏程序的logcat报错如下:
+2026-09-06 21:39:15.070 28137-28480 StreamServer            com.sellgirl.castScreen              D  Request: /stream.ts
+2026-09-06 21:39:15.142 28137-28457 fi.iki.elonen.NanoHTTPD com.sellgirl.castScreen              E  Could not send response to the client
+                                                                                                    java.net.SocketException: Broken pipe
+                                                                                                    	at java.net.SocketOutputStream.socketWrite0(Native Method)
+                                                                                                    	at java.net.SocketOutputStream.socketWrite(SocketOutputStream.java:116)
+                                                                                                    	at java.net.SocketOutputStream.write(SocketOutputStream.java:144)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$Response$ChunkedOutputStream.write(NanoHTTPD.java:1442)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$Response.sendBody(NanoHTTPD.java:1694)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$Response.sendBodyWithCorrectEncoding(NanoHTTPD.java:1667)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$Response.sendBodyWithCorrectTransferAndEncoding(NanoHTTPD.java:1654)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$Response.send(NanoHTTPD.java:1624)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$HTTPSession.execute(NanoHTTPD.java:957)
+                                                                                                    	at fi.iki.elonen.NanoHTTPD$ClientHandler.run(NanoHTTPD.java:192)
+                                                                                                    	at java.lang.Thread.run(Thread.java:1572)
+2026-09-06 21:39:15.159 28137-28450 System.err              com.sellgirl.castScreen              W  java.io.IOException: Pipe closed
+2026-09-06 21:39:15.159 28137-28450 System.err              com.sellgirl.castScreen              W  	at java.io.PipedInputStream.checkStateForReceive(PipedInputStream.java:263)
+2026-09-06 21:39:15.160 28137-28450 System.err              com.sellgirl.castScreen              W  	at java.io.PipedInputStream.receive(PipedInputStream.java:229)
+2026-09-06 21:39:15.160 28137-28450 System.err              com.sellgirl.castScreen              W  	at java.io.PipedOutputStream.write(PipedOutputStream.java:149)
+2026-09-06 21:39:15.160 28137-28450 System.err              com.sellgirl.castScreen              W  	at java.io.OutputStream.write(OutputStream.java:127)
+2026-09-06 21:39:15.160 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.TSMuxer.writePES(TSMuxer.java:182)
+2026-09-06 21:39:15.160 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.TSMuxer.writeFrame(TSMuxer.java:58)
+2026-09-06 21:39:15.161 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.DLNACastManager.lambda$startStreaming2$1(DLNACastManager.java:93)
+2026-09-06 21:39:15.161 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.DLNACastManager.$r8$lambda$UiOY99d852LSViMNfoIBqca5ML4(DLNACastManager.java:0)
+2026-09-06 21:39:15.161 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.DLNACastManager$$ExternalSyntheticLambda0.onFrame(D8$$SyntheticClass:0)
+2026-09-06 21:39:15.161 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.ScreenCaptureManager.drainEncoder(ScreenCaptureManager.java:135)
+2026-09-06 21:39:15.161 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.ScreenCaptureManager.$r8$lambda$fXmTpNJOulX7Ly22IKUkP96SB0s(ScreenCaptureManager.java:0)
+2026-09-06 21:39:15.162 28137-28450 System.err              com.sellgirl.castScreen              W  	at com.sellgirl.castScreen.android.send.ScreenCaptureManager$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+2026-09-06 21:39:15.162 28137-28450 System.err              com.sellgirl.castScreen              W  	at java.lang.Thread.run(Thread.java:1572)
+
+看起来是stream关闭了? 怎么解决?
+
+-------
+1. 你这样的解释, 改变了我之前的一些理解. 我以前做过网站, 我以为后端输出和前端浏览器的报错应该是分开的, 没关系的, 即是, 就算浏览器报错, 网页其实还是正常存在的.
+2. 但现在的情况好像不一样? in 和 out 是成对的, 如果 浏览器/电视 对应的in关闭了, out就会报错. 那这里我就有新的疑问了, 你知道我之前用电脑浏览器测试吧,其实那时候,我电视端也同时在访问,
+现在的疑问是, 你当前版本的StreamServer和TSMuxer,他生成的xx.ts地址, 同时用电视和浏览器(或者还有其它端)一起访问, 现在的架构是存在问题的吗?
+如果多端访问的情况, 是否需要改造StreamServer.serve方法? 不同的客户端给它 new 一对 in 和 out, 然后TSMuxer要同时向多个out写数据?
+-------
+1. 现在writeFrame不会停了,一直写,但VLC播放器画面是空的. 电视也无画面几分钟断开
+2. 投屏软件切换到后台时, encoder.dequeueOutputBuffer(bufferInfo, 10000) 返回-1, 没数据. 是否需要起动前台服务来保持运作? 另外MediaCodec确定支持后台截屏吗?
+3. 你之前说用ffplay来测试,我以前用过格式工厂,好像见过ffplay ffmpeg,但现在记不清了,ffmpeg可以用来测试吗? 下面是我把你的测试命令改为ffmpeg后的输出:
+PS D:\Program Files (x86)\FormatFactory> ./ffmpeg.exe -i http://192.168.10.105:8080/stream.ts -loglevel debug 2>&1 | tee ffplay.log
+./ffmpeg.exe : ffmpeg (Format Factory Revision)version N-110064-gcbcc817353 Copyright (c) 2000-2023 the FFmpeg develope
+rs
+所在位置 行:1 字符: 1
++ ./ffmpeg.exe -i http://192.168.10.105:8080/stream.ts -loglevel debug  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ffmpeg (Format ...mpeg developers:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  built with gcc 8.3.0 (Rev2, Built by MSYS2 project)
+  configuration: --prefix=/mingw64 --arch=x86_64 --disable-static --enable-shared --enable-small --disable-debug --extr
+a-cflags='-ID:\CodeLib\Video_Codec_SDK_10.0.26\include -I/mingw64/include/mfx -O2' --extra-ldflags='-LD:\CodeLib\Video_
+Codec_SDK_10.0.26\Lib\x64' --enable-gpl --enable-version3 --enable-nonfree --enable-cuda --enable-cuvid --enable-dxva2
+--enable-nvenc --enable-frei0r --enable-amf --enable-libmfx --enable-encoder=h264_qsv --enable-decoder=h264_qsv --enabl
+e-encoder=hevc_qsv --enable-libass --enable-libzvbi --enable-fontconfig --enable-iconv --enable-libbs2b --enable-libfre
+etype --enable-libgsm --enable-libilbc --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enab
+le-libopenjpeg --enable-libopus --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-l
+ibvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxvid --
+enable-libaom --enable-bzlib --enable-lzma --enable-zlib --extra-libs='-static-libgcc -static-libstdc++ -lstdc++ -lgcc_
+eh -lpthread -lintl -liconv'
+  libavutil      58.  5.100 / 58.  5.100
+  libavcodec     60.  6.101 / 60.  6.101
+  libavformat    60.  4.100 / 60.  4.100
+  libavdevice    60.  2.100 / 60.  2.100
+  libavfilter     9.  4.100 /  9.  4.100
+  libswscale      7.  2.100 /  7.  2.100
+  libswresample   4. 11.100 /  4. 11.100
+  libpostproc    57.  2.100 / 57.  2.100
+Splitting the commandline.
+Reading option '-i' ... matched as input url with argument 'http://192.168.10.105:8080/stream.ts'.
+Reading option '-loglevel' ... matched as option 'loglevel' (set logging level) with argument 'debug'.
+Finished splitting the commandline.
+Parsing a group of options: global .
+Applying option loglevel (set logging level) with argument debug.
+Successfully parsed a group of options.
+Parsing a group of options: input url http://192.168.10.105:8080/stream.ts.
+Successfully parsed a group of options.
+Opening an input file: http://192.168.10.105:8080/stream.ts.
+[NULL @ 000002c07b557840] Opening 'http://192.168.10.105:8080/stream.ts' for reading
+[http @ 000002c07b557ec0] Setting default whitelist 'http,https,tls,rtp,tcp,udp,crypto,httpproxy,data'
+[tcp @ 000002c07b558040] Original list of addresses:
+[tcp @ 000002c07b558040] Address 192.168.10.105 port 8080
+[tcp @ 000002c07b558040] Interleaved list of addresses:
+[tcp @ 000002c07b558040] Address 192.168.10.105 port 8080
+[tcp @ 000002c07b558040] Starting connection attempt to 192.168.10.105 port 8080
+[tcp @ 000002c07b558040] Successfully connected to 192.168.10.105 port 8080
+[http @ 000002c07b557ec0] request: GET /stream.ts HTTP/1.1
+User-Agent: Lavf/60.4.100
+Accept: */*
+Range: bytes=0-
+Connection: close
+Host: 192.168.10.105:8080
+Icy-MetaData: 1
+[mpegts @ 000002c07b557840] Format mpegts probed with size=2048 and score=50
+[mpegts @ 000002c07b557840] Continuity check failed for pid 0 expected 1 got 0
+    Last message repeated 1 times
+[mpegts @ 000002c07b557840] Continuity check failed for pid 4096 expected 1 got 0
+[mpegts @ 000002c07b557840] stream=0 stream_type=1b pid=100 prog_reg_desc=
+[mpegts @ 000002c07b557840] Before avformat_find_stream_info() pos: 0 bytes read:139120 seeks:0 nb_streams:1
+[mpegts @ 000002c07b557840] Continuity check failed for pid 256 expected 1 got 0
+    Last message repeated 417 times
+[mpegts @ 000002c07b557840] Continuity check failed for pid 0 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 4096 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 256 expected 1 got 0
+    Last message repeated 314 times
+[mpegts @ 000002c07b557840] Continuity check failed for pid 0 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 4096 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 256 expected 1 got 0
+    Last message repeated 385 times
+[mpegts @ 000002c07b557840] Continuity check failed for pid 0 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 4096 expected 1 got 0
+[mpegts @ 000002c07b557840] Continuity check failed for pid 256 expected 1 got 0
+    Last message repeated 315 times
+
+你能看出问题在哪吗?
+
+---------
+PS D:\Program Files (x86)\FormatFactory> ./ffmpeg.exe -i http://192.168.10.105:8080/stream.ts -loglevel debug 2>&1 | tee ffplay.log
+./ffmpeg.exe : ffmpeg (Format Factory Revision)version N-110064-gcbcc817353 Copyright (c) 2000-2023 the FFmpeg developers
+所在位置 行:1 字符: 1
++ ./ffmpeg.exe -i http://192.168.10.105:8080/stream.ts -loglevel debug  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ffmpeg (Format ...mpeg developers:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+
+  built with gcc 8.3.0 (Rev2, Built by MSYS2 project)
+  configuration: --prefix=/mingw64 --arch=x86_64 --disable-static --enable-shared --enable-small --disable-debug --extra-cflags='-ID:\CodeLib\Video_Codec_SDK_10.0.26\include -I/mingw64/include/mfx -O2' --extra-ldflags='-LD:\CodeLib\Vide
+o_Codec_SDK_10.0.26\Lib\x64' --enable-gpl --enable-version3 --enable-nonfree --enable-cuda --enable-cuvid --enable-dxva2 --enable-nvenc --enable-frei0r --enable-amf --enable-libmfx --enable-encoder=h264_qsv --enable-decoder=h264_qsv --e
+nable-encoder=hevc_qsv --enable-libass --enable-libzvbi --enable-fontconfig --enable-iconv --enable-libbs2b --enable-libfreetype --enable-libgsm --enable-libilbc --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb
+--enable-libopenjpeg --enable-libopus --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-li
+bxvid --enable-libaom --enable-bzlib --enable-lzma --enable-zlib --extra-libs='-static-libgcc -static-libstdc++ -lstdc++ -lgcc_eh -lpthread -lintl -liconv'
+  libavutil      58.  5.100 / 58.  5.100
+  libavcodec     60.  6.101 / 60.  6.101
+  libavformat    60.  4.100 / 60.  4.100
+  libavdevice    60.  2.100 / 60.  2.100
+  libavfilter     9.  4.100 /  9.  4.100
+  libswscale      7.  2.100 /  7.  2.100
+  libswresample   4. 11.100 /  4. 11.100
+  libpostproc    57.  2.100 / 57.  2.100
+Splitting the commandline.
+Reading option '-i' ... matched as input url with argument 'http://192.168.10.105:8080/stream.ts'.
+Reading option '-loglevel' ... matched as option 'loglevel' (set logging level) with argument 'debug'.
+Finished splitting the commandline.
+Parsing a group of options: global .
+Applying option loglevel (set logging level) with argument debug.
+Successfully parsed a group of options.
+Parsing a group of options: input url http://192.168.10.105:8080/stream.ts.
+Successfully parsed a group of options.
+Opening an input file: http://192.168.10.105:8080/stream.ts.
+[NULL @ 0000021a53417840] Opening 'http://192.168.10.105:8080/stream.ts' for reading
+[http @ 0000021a53417ec0] Setting default whitelist 'http,https,tls,rtp,tcp,udp,crypto,httpproxy,data'
+[tcp @ 0000021a53418040] Original list of addresses:
+[tcp @ 0000021a53418040] Address 192.168.10.105 port 8080
+[tcp @ 0000021a53418040] Interleaved list of addresses:
+[tcp @ 0000021a53418040] Address 192.168.10.105 port 8080
+[tcp @ 0000021a53418040] Starting connection attempt to 192.168.10.105 port 8080
+[tcp @ 0000021a53418040] Successfully connected to 192.168.10.105 port 8080
+[http @ 0000021a53417ec0] request: GET /stream.ts HTTP/1.1
+User-Agent: Lavf/60.4.100
+Accept: */*
+Range: bytes=0-
+Connection: close
+Host: 192.168.10.105:8080
+Icy-MetaData: 1
+[mpegts @ 0000021a53417840] Format mpegts probed with size=2048 and score=50
+[mpegts @ 0000021a53417840] stream=0 stream_type=1b pid=100 prog_reg_desc=
+[mpegts @ 0000021a53417840] Before avformat_find_stream_info() pos: 0 bytes read:42112 seeks:0 nb_streams:1
+
+如上就停在pos:0这一行,不动了,怎么搞?
