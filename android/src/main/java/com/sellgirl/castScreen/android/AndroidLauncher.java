@@ -107,7 +107,13 @@ public class AndroidLauncher extends AndroidApplication {
 //        if (captureManager != null) {
 //            captureManager.onActivityResult(requestCode, resultCode, data, this);
 //        }
-        if (castManager3 != null&&null!=castManager3.captureManager) {
+
+//        if (castManager3 != null&&null!=castManager3.captureManager) {
+//            castManager3.captureManager.onActivityResult(requestCode, resultCode, data, this);
+//        }
+
+        // 将结果传递给 captureManager
+        if (castManager3 != null) {
             castManager3.captureManager.onActivityResult(requestCode, resultCode, data, this);
         }
     }
@@ -116,7 +122,7 @@ public class AndroidLauncher extends AndroidApplication {
 protected DLNADeviceScanner2 scanner;
 //    private DLNADeviceScanner scanner;
     private DLNACastManager castManager;
-    private com.sellgirl.castScreen.android.send.DLNACastManager castManager3;
+    private com.sellgirl.castScreen.android.send2.DLNACastManager castManager3;
     private com.sellgirl.castScreen.android.sendfile.DLNACastManager castManager4;
 
     @Override
@@ -152,54 +158,73 @@ protected DLNADeviceScanner2 scanner;
         SimpleCastManager castManager2 = new SimpleCastManager();
 
         castManager = new DLNACastManager();
-        castManager3 = new com.sellgirl.castScreen.android.send.DLNACastManager();
+        castManager3 = new com.sellgirl.castScreen.android.send2.DLNACastManager();
         castManager4 = new com.sellgirl.castScreen.android.sendfile.DLNACastManager();
         game.setCaster(new IDLNADeviceCaster() {
             @Override
             // 用户选择设备后调用
             public void startCasting(DeviceIp ip//, UpnpService upnpService
             ) {
+                //send旧方案,有多广播端关键帧计算混乱的现象
+//                UpnpService upnpService=scanner.getUpnpService();
+//                DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
+//
+//                try {
+//                    String videoUrl=castManager3.startStreaming2(AndroidLauncher.this, device, upnpService);
+//                    if(true){return;}// todo 先用浏览器测试,通过再用电视
+//                    new Thread(() -> {
+//
+//                        try {
+//                            Thread.sleep(5000);
+//                        } catch (InterruptedException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                        String location=ip.location;
+//                        if (location != null && castManager2.loadDevice(location)) {
+//                            // 投屏测试
+//////                String videoUrl = "http://你的手机IP:8080/stream.ts"; // 先填一个测试视频 URL
+////                    String videoUrl="http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4";
+////                            String videoUrl=webUrl;
+//                            if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+//                                castManager2.play();
+//                            }
+//                        }
+////                        if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+////                            castManager2.play();
+////                        }
+//                    }).start();
+//
+//                }catch (Exception e){
+//                    SGDataHelper.getLog().printException(e,TAG);
+//                }
+////                // 打印设备名称和服务信息
+////                Log.d(TAG, "Device: " + device.getFriendlyName());
+////                for (Service service : device.getRawDevice().getServices()) {
+////                    ServiceType type = service.getServiceType();
+////                    Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
+////                    Log.d(TAG, "  url: "+device.getLocation());
+////                }
+
+                //send1
                 UpnpService upnpService=scanner.getUpnpService();
                 DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
 
+                // 1. 初始化并请求录屏权限
+                castManager3.startCasting( AndroidLauncher.this);
 
-//                castManager.startStreaming(AndroidLauncher.this, device, upnpService);
-//                castManager.startStreaming2(AndroidLauncher.this, device, upnpService);
-                try {
-                    String videoUrl=castManager3.startStreaming2(AndroidLauncher.this, device, upnpService);
-                    //if(true){return;}//todo 先用浏览器测试,通过再用电视
-                    new Thread(() -> {
+////                // 2. 连接DLNA设备（假设已扫描到）
+//                castManager3.connectDevice(device, upnpService);
+//
+////                // 3. 发送投屏指令
+                String videoUrl = "http://" + castManager3.getLocalIpAddress() + ":8080/stream.ts";
+//                castManager3.castToDevice(videoUrl, "Screen Mirroring");
 
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        String location=ip.location;
-                        if (location != null && castManager2.loadDevice(location)) {
-                            // 投屏测试
-////                String videoUrl = "http://你的手机IP:8080/stream.ts"; // 先填一个测试视频 URL
-//                    String videoUrl="http://mp3.sellgirl.com/mp3/v/IGNITE_%E5%AE%8C%E6%95%B4%E7%89%88.mp4";
-//                            String videoUrl=webUrl;
-                            if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
-                                castManager2.play();
-                            }
-                        }
-//                        if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
-//                            castManager2.play();
-//                        }
-                    }).start();
-
-                }catch (Exception e){
-                    SGDataHelper.getLog().printException(e,TAG);
+                String location=ip.location;
+                if (location != null && castManager2.loadDevice(location)) {
+                    if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+                        castManager2.play();
+                    }
                 }
-//                // 打印设备名称和服务信息
-//                Log.d(TAG, "Device: " + device.getFriendlyName());
-//                for (Service service : device.getRawDevice().getServices()) {
-//                    ServiceType type = service.getServiceType();
-//                    Log.d(TAG, "  Service: " + type.getNamespace() + ":" + type.getType() + " v" + type.getVersion());
-//                    Log.d(TAG, "  url: "+device.getLocation());
-//                }
             }
 
             @Override
@@ -305,7 +330,7 @@ protected DLNADeviceScanner2 scanner;
         super.onDestroy();
         if (scanner != null) {scanner.stopScan();}
         if (castManager != null) {castManager.stopStreaming();}
-        if (castManager3 != null) {castManager3.stopStreaming();}
+        if (castManager3 != null) {castManager3.stopCasting();}
     }
 //    public static class DLNACaster implements IDLNADeviceCaster {
 //        protected DLNADeviceScanner2 scanner;
