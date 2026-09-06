@@ -22,15 +22,12 @@ import com.sellgirl.castScreen.android.sendimg.SimpleCastManager;
 import com.sellgirl.castScreen.model.DeviceIp;
 //import com.sellgirl.castScreen.android.send.DLNACastManager;
 import com.sellgirl.castScreen.android.sendimg.DLNACastManager;
+import com.sellgirl.castScreen.android.permission.PermissionManager;
+import com.sellgirl.castScreen.android.permission.PermissionRequest;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import org.jupnp.UpnpService;
-import org.jupnp.model.meta.RemoteDevice;
-import org.jupnp.model.meta.Service;
-import org.jupnp.model.types.ServiceType;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -335,9 +332,90 @@ protected DLNADeviceScanner2 scanner;
             int aa=1;
         }).start();
         int aa=1;
-        if(!checkAndRequestPermission()){
-            requestPermission();
-        }
+
+//        if(!checkAndRequestPermission()){
+//            requestPermission();
+//        }
+
+        checkPermissionsAfterInit();
+    }
+    private void checkPermissionsAfterInit() {
+        // 延迟检查，确保游戏已经初始化完成
+        Gdx.app.postRunnable(new Runnable() {
+            @Override
+            public void run() {
+                initPermissionManager();
+                permissionManager.startRequest(AndroidLauncher.this,null);
+//                if (!allRequiredPermissionsGranted()) {
+//                    // 通知游戏显示权限申请界面
+//                    myGame.showPermissionRequest();
+//                } else {
+//                    // 所有权限已获取，正常启动游戏
+//                    permissionsGranted = true;
+//                    myGame.onAllPermissionsGranted();
+//                    startOverlayService();
+//                }
+            }
+        });
+    }
+    private PermissionManager permissionManager;
+    private void initPermissionManager() {
+        permissionManager = new PermissionManager(this);
+
+        // 按优先级添加权限
+        permissionManager
+            .addPermission(new PermissionRequest.Builder()
+                .setName(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .setDesc("相册权限")
+                .setCode(PerCode.P_SELECT_PIC)
+                .setType(PermissionRequest.TYPE_MEDIA)
+//                .setOnGranted(this::onStoragePermissionGranted)
+//                .setOnDenied(this::onStoragePermissionDenied)
+//                .setRequired(true)
+                .build())
+//            // 悬浮窗权限（游戏工具必备）
+//            .addPermission(new PermissionRequest.Builder()
+//                .setName("OVERLAY")
+//                .setDesc("悬浮窗权限")
+//                .setCode(REQUEST_OVERLAY_PERMISSION)
+//                .setType(PermissionRequest.TYPE_OVERLAY)
+//                .setOnGranted(this::onOverlayPermissionGranted)
+//                .setOnDenied(this::onOverlayPermissionDenied)
+//                .setRequired(true)
+//                .build())
+//
+//            // 2. 无障碍权限（高级功能）
+//            .addPermission(new PermissionRequest.Builder()
+//                .setName("ACCESSIBILITY")
+//                .setDesc("无障碍权限")
+//                .setCode(REQUEST_ACCESSIBILITY_PERMISSION)
+//                .setType(PermissionRequest.TYPE_ACCESSIBILITY)
+//                .setOnGranted(this::onAccessibilityPermissionGranted)
+//                .setOnDenied(this::onAccessibilityPermissionDenied)
+//                .setRequired(false) // 设为非必需，因为申请流程复杂
+//                .build())
+//
+//            // 存储权限（保存游戏数据）
+//            .addPermission(new PermissionRequest.Builder()
+//                .setName(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                .setDesc("存储权限")
+//                .setCode(REQUEST_WRITE_EXTERNAL_STORAGE_PERMISSION)
+//                .setType(PermissionRequest.TYPE_NORMAL)
+//                .setOnGranted(this::onStoragePermissionGranted)
+//                .setOnDenied(this::onStoragePermissionDenied)
+//                .setRequired(true)
+//                .build())
+
+//                    // 网络权限（游戏更新、排行榜等）
+//                    .addPermission(new PermissionRequest.Builder()
+//                            .setName(Manifest.permission.INTERNET)
+//                            .setDesc("网络权限")
+//                            .setCode(1004)
+//                            .setOnGranted(this::onNetworkPermissionGranted)
+//                            .setRequired(true)
+//                            .build())
+        ;
+//            permissionManager.initOK();
     }
 
     // 用户选择设备后调用
