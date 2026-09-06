@@ -75,6 +75,7 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 //import com.mygdx.game.sasha.util.GamePreferences;
 //import com.mygdx.game.share.ISGCloudSave;
 //import com.mygdx.game.share.ScreenSetting;
+import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.Constants;
 import com.sellgirl.castScreen.GameKey;
 import com.sellgirl.castScreen.GameKeyKeyboard;
@@ -294,7 +295,9 @@ public class MainMenuScreen implements Screen {
 		Gdx.input.setInputProcessor(stage);
 
 
-		skin = MainMenuScreen.getSkin();
+//		skin = MainMenuScreen.getSkin();
+        skin = CastScreen.getSkin2(game.getFont());
+        skin.add("default",game.getFont());
 
 		skin.add("default", MainMenuScreen.getButtonStyle(skin));
 		skin.add("default", MainMenuScreen.getLabelStyle(skin));
