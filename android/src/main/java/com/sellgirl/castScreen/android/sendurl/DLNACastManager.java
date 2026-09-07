@@ -1,13 +1,11 @@
-package com.sellgirl.castScreen.android.sendimg;
+package com.sellgirl.castScreen.android.sendurl;
 import android.app.Activity;
 import android.util.Log;
 
 import com.sellgirl.castScreen.android.DLNADeviceScanner2;
 import com.sellgirl.castScreen.android.send.ScreenCaptureManager;
-import com.sellgirl.castScreen.android.send.TSMuxer;
 //import com.sellgirl.castScreen.android.send.StreamServer;
 import com.sellgirl.castScreen.android.send.TSMuxer2;
-import com.sellgirl.castScreen.android.sendimg.StreamServer;
 
 import org.jupnp.UpnpService;
 import org.jupnp.controlpoint.ActionCallback;

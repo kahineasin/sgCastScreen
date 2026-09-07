@@ -295,8 +295,12 @@ public class SignalFileScreen implements Screen// extends ApplicationAdapter
 
         Batch batch=stage.getBatch();
         batch.begin();
-//        game.getFont2()//.font
-//            .draw(batch,"version:"+gameVersion,ScreenSetting.WORLD_WIDTH-200,30);
+        float fontX=0;
+        float fontY=ScreenSetting.WORLD_HEIGHT-10f;
+        float fontRow=26;
+        game.getFont()//.font
+            .draw(batch,"sysIp:"+(null==game.getSysIp()?"loading":game.getSysIp()),fontX,fontY);
+        fontY-=fontRow;
 //        game.font//.font
 //            .draw(batch,"version:"+gameVersion,ScreenSetting.WORLD_WIDTH-300,40);
         batch.end();

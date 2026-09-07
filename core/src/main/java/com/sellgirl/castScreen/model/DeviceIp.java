@@ -16,4 +16,13 @@ public class DeviceIp {
     public String toString() {
         return "udn:"+udn+" name:"+name+" location:"+location;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeviceIp that = (DeviceIp) o;
+        return udn.equals(that.udn)&&location.equals(that.location);
+    }
 }

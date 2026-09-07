@@ -28,7 +28,7 @@ import com.sellgirl.sgGameHelper.SGGameHelper;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class SignalImgScreen implements Screen// extends ApplicationAdapter
+public class SignalUrlScreen implements Screen// extends ApplicationAdapter
  {
 //    private SpriteBatch batch;
 //    private Texture image;
@@ -47,7 +47,7 @@ public class SignalImgScreen implements Screen// extends ApplicationAdapter
      private Skin skin;
      private  boolean test=false;
      private AssetManager manager;
-    public SignalImgScreen(IKnightSasha game){
+    public SignalUrlScreen(IKnightSasha game){
         this.game=game;
         create();
     }

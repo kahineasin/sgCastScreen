@@ -33,4 +33,6 @@ public interface IKnightSasha {
      IDLNADeviceCaster getCaster() ;
 
      void setCaster(IDLNADeviceCaster caster);
+     String getSysIp();
+    void setSysIp(String sysIp);
 }

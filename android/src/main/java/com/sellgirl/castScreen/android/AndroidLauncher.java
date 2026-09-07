@@ -18,10 +18,13 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.sellgirl.castScreen.CastScreen;
 import com.sellgirl.castScreen.IDLNADeviceCaster;
-import com.sellgirl.castScreen.android.sendimg.SimpleCastManager;
+import com.sellgirl.castScreen.IOnDeviceScanListener;
+import com.sellgirl.castScreen.cache.LocalDeviceIp;
+import com.sellgirl.castScreen.cache.LocalSaveSettingHelper;
+import com.sellgirl.castScreen.android.sendurl.SimpleCastManager;
 import com.sellgirl.castScreen.model.DeviceIp;
 //import com.sellgirl.castScreen.android.send.DLNACastManager;
-import com.sellgirl.castScreen.android.sendimg.DLNACastManager;
+import com.sellgirl.castScreen.android.sendurl.DLNACastManager;
 import com.sellgirl.castScreen.android.permission.PermissionManager;
 import com.sellgirl.castScreen.android.permission.PermissionRequest;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
@@ -30,6 +33,12 @@ import org.jupnp.UpnpService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
 /** Launches the Android application. */
 public class AndroidLauncher extends AndroidApplication {
@@ -146,6 +155,10 @@ protected DLNADeviceScanner2 scanner;
 
     private String videoUrl;
     private DeviceIp ip;
+    private String sysIp;
+
+    LocalSaveSettingHelper cacheHelper=null;
+    LocalDeviceIp cacheIp=null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -170,8 +183,50 @@ protected DLNADeviceScanner2 scanner;
                 Log.e("DLNA", "Error: " + error);
             }
         });
+
+        sysIp=getLocalIpAddress();
+        scanner.addScanListener(new IOnDeviceScanListener() {
+            @Override
+            public void onDeviceFound(DeviceIp device) {
+
+                boolean testFound=false;
+                for(DeviceIp ip:cacheIp.getIp()){
+                    if(device.equals( ip)){
+                        testFound=true;
+                        break;
+                    }
+//                    scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation(ip.location));
+                }
+                if(!testFound){
+                    cacheIp.getIp().add(device);
+                    sysIp=getLocalIpAddress();//更新ip
+                    cacheHelper.saveGameKey(sysIp,cacheIp);
+                }
+            }
+
+            @Override
+            public void onDeviceLost(DeviceIp device) {
+
+            }
+
+            @Override
+            public void onScanStarted() {
+
+            }
+
+            @Override
+            public void onScanStopped() {
+
+            }
+
+            @Override
+            public void onError(String error) {
+
+            }
+        });
 //        scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
         game.setScanner(scanner);
+        game.setSysIp(sysIp);
 
 
 //        SGDataHelper.sgLog=new SGLibGdxLog();
@@ -312,9 +367,30 @@ protected DLNADeviceScanner2 scanner;
             }
         });
 
+         cacheHelper=new LocalSaveSettingHelper();
+         cacheIp=cacheHelper.readGameKey(sysIp,new LocalDeviceIp());
+         if(null==cacheIp){cacheIp=new LocalDeviceIp();cacheIp.setIp(new ArrayList<>());}
         new Thread(() -> {
+
+            if(null==cacheIp.getIp()){cacheIp.setIp(new ArrayList<>());}
+            boolean testFound=false;
+            for(DeviceIp ip:cacheIp.getIp()){
+                if("http://192.168.10.22:39520/description.xml".equals( ip.location)){
+                    testFound=true;
+                }
+                scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation(ip.location));
+            }
+            if(!testFound){
+                DeviceIp ip=new DeviceIp();
+                ip.location="http://192.168.10.22:39520/description.xml";
+                ip.udn="990a-a184-eded-e14b";
+                cacheIp.getIp().add(ip);
+                cacheHelper.saveGameKey(sysIp,cacheIp);
+                scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
+            }
+
             scanner.startScan();
-            scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
+//            scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
 
             startScreenCapture();
 //            SimpleCastManager castManager2 = new SimpleCastManager();
@@ -557,5 +633,24 @@ protected DLNADeviceScanner2 scanner;
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    // 获取本机IP（用于生成URL）
+    public String getLocalIpAddress() {
+        try {
+            Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+            while (en.hasMoreElements()) {
+                NetworkInterface nif = en.nextElement();
+                Enumeration<InetAddress> addr = nif.getInetAddresses();
+                while (addr.hasMoreElements()) {
+                    InetAddress ip = addr.nextElement();
+                    if (!ip.isLoopbackAddress() && ip instanceof Inet4Address) {
+                        return ip.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return "127.0.0.1";
     }
 }

@@ -54,6 +54,7 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
     private final Array2<DeviceIp> deviceIps=new Array2<>();
     private OnDeviceScanListener listener;
     private IOnDeviceScanListener listener2;
+    private Array2<IOnDeviceScanListener> listeners;
     private Context context;
     private boolean isScanning = false;
 //    private final Object lock = new Object();
@@ -82,6 +83,7 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
 
     public void setListener(OnDeviceScanListener listener) { this.listener = listener; }
     public void setScanListener(IOnDeviceScanListener listener) { this.listener2 = listener; }
+    public void addScanListener(IOnDeviceScanListener listener) { if(null==listeners){listeners=new Array2<>();} this.listeners.add(listener); }
 
     public UpnpService getUpnpService(){
         return upnpService.get();
@@ -131,6 +133,11 @@ public void addDevice(RemoteDevice device){
         deviceIps.add(ip);
         if (listener != null) listener.onDeviceFound(dlnaDevice);
         if (listener2 != null) listener2.onDeviceFound(ip);
+        if ( listeners != null) {
+            for(IOnDeviceScanListener i:listeners){
+                i.onDeviceFound(ip);
+            }
+        }
     }
 }
     private void doSearch() {
@@ -243,7 +250,12 @@ public void addDevice(RemoteDevice device){
                         idx++;
                     }
                     if (listener != null) listener.onDeviceLost(dlnaDevice);
-                    if ( listener2 != null&&null!=find) listener2.onDeviceLost(find);
+                    if ( listener2 != null&&null!=find) {listener2.onDeviceLost(find);}
+                    if ( listeners != null&&null!=find) {
+                        for(IOnDeviceScanListener i:listeners){
+                            i.onDeviceLost(find);
+                        }
+                    }
                 }
             });
 

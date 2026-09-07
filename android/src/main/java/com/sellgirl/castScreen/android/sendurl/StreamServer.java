@@ -1,4 +1,4 @@
-package com.sellgirl.castScreen.android.sendimg;
+package com.sellgirl.castScreen.android.sendurl;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -6,13 +6,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;

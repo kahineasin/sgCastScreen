@@ -7,11 +7,6 @@ import static com.badlogic.gdx.scenes.scene2d.actions.Actions.touchable;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.TextInputListener;
-import com.badlogic.gdx.Net;
-import com.badlogic.gdx.Net.HttpRequest;
-import com.badlogic.gdx.Net.HttpResponse;
-import com.badlogic.gdx.Net.HttpResponseListener;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.controllers.Controller;
@@ -85,7 +80,6 @@ import com.sellgirl.castScreen.ScreenSetting;
 import com.sellgirl.castScreen.language.TXT;
 import com.sellgirl.sgGameHelper.SGConfirmPopups;
 import com.sellgirl.sgGameHelper.SGFileDownloader;
-import com.sellgirl.sgGameHelper.SGGameHelper;
 import com.sellgirl.sgGameHelper.SGLibGdxHelper;
 import com.sellgirl.sgGameHelper.gamepad.AutoConnectGamepad;
 import com.sellgirl.sgGameHelper.gamepad.ISGPS5Gamepad;//import com.mygdx.game.share.gamepad.ISGPS5Gamepad;
@@ -93,17 +87,13 @@ import com.sellgirl.sgGameHelper.gamepad.SGKeyboardGamepad;//import com.mygdx.ga
 import com.sellgirl.sgGameHelper.gamepad.SGPS5Gamepad;//import com.mygdx.game.share.gamepad.SGPS5Gamepad;
 import com.sellgirl.sgGameHelper.tabUi.SGTabUDLRMap;//import com.mygdx.game.share.tabUi.SGTabUDLRMap;
 import com.sellgirl.sgGameHelper.tabUi.TabUi;//import com.mygdx.game.share.tabUi.TabUi;
-import com.sellgirl.sgJavaHelper.AES;
 import com.sellgirl.sgJavaHelper.SGAction1;
 import com.sellgirl.sgJavaHelper.SGDate;
 import com.sellgirl.sgJavaHelper.SGEmailSend;
-import com.sellgirl.sgJavaHelper.SGRef;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 //import com.mygdx.game.share.SGGameHelper;
@@ -965,7 +955,7 @@ public class MainMenuScreen implements Screen {
 
 
     private void goToCastImgScreen() {
-        game.setScreen(new SignalImgScreen(game));
+        game.setScreen(new SignalUrlScreen(game));
         dispose();
 
     }

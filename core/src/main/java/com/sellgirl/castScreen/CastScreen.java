@@ -503,6 +503,17 @@ public static String readExCn(){
         this.caster = caster;
     }
 
+    private String sysIp;
+    @Override
+    public String getSysIp() {
+        return sysIp;
+    }
+
+    @Override
+    public void setSysIp(String sysIp) {
+        this.sysIp=sysIp;
+    }
+
     @Override
     public BitmapFont getFont() {
         return font;

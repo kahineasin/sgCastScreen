@@ -1,4 +1,4 @@
-package com.sellgirl.castScreen.android.sendimg;
+package com.sellgirl.castScreen.android.sendurl;
 
 import android.util.Log;
 
