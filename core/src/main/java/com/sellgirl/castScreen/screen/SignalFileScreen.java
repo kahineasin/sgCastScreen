@@ -154,6 +154,11 @@ public class SignalFileScreen implements Screen// extends ApplicationAdapter
                 Gdx.app.postRunnable(() -> {
 //                    Log.d("DLNA", "Found: " + device.getFriendlyName());
                     SGDataHelper.getLog().print("DLNA Found: " + device.name);
+                    if(null==skin){
+                        int aa=3;
+                        SGDataHelper.getLog().print("skin is null");//todo
+                        return;
+                    }
                     final TextButton btn = new TextButton( device.name, skin);
                     btn.addListener(new ClickListener() {
 

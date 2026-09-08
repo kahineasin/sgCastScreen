@@ -19,13 +19,14 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import com.sellgirl.castScreen.android.PerCode;
 import com.sellgirl.sgJavaHelper.config.SGDataHelper;
 
 import java.nio.ByteBuffer;
 
 public class ScreenCaptureManager {
     private static final String TAG = "ScreenCapture";
-    private static final int REQUEST_CODE = 100;
+    private static final int REQUEST_CODE = PerCode.CAST_SCREEN;
     private MediaProjection mediaProjection;
     private MediaCodec encoder;
     private VirtualDisplay virtualDisplay;

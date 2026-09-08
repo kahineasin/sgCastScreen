@@ -132,8 +132,10 @@ public class AndroidLauncher extends AndroidApplication {
 //        }
 
         // 将结果传递给 captureManager
-        if (requestCode==PerCode.CAST_SCREEN&&castManager3 != null) {
-            castManager3.captureManager.onActivityResult(requestCode, resultCode, data, this);
+        if (requestCode==PerCode.CAST_SCREEN//&&castManager3 != null
+        ) {
+//            castManager3.captureManager.onActivityResult(requestCode, resultCode, data, this);
+            castManager5.captureManager.onActivityResult(requestCode, resultCode, data, this);
         }
         if (requestCode==PerCode.REQUEST_CODE_PICK_VIDEO
             //&& resultCode == RESULT_OK
@@ -152,6 +154,7 @@ protected DLNADeviceScanner2 scanner;
     private SimpleCastManager castManager2;
     private com.sellgirl.castScreen.android.send2.DLNACastManager castManager3;
     private com.sellgirl.castScreen.android.sendfile.DLNACastManager castManager4;
+    private com.sellgirl.castScreen.android.send.DLNACastManager castManager5;
 
     private String videoUrl;
     private DeviceIp ip;
@@ -159,6 +162,11 @@ protected DLNADeviceScanner2 scanner;
 
     LocalSaveSettingHelper cacheHelper=null;
     LocalDeviceIp cacheIp=null;
+
+    public enum CastType{
+        URL,FILE,SCREEN
+    }
+    private CastType castType=CastType.FILE;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -236,6 +244,7 @@ protected DLNADeviceScanner2 scanner;
         castManager = new DLNACastManager();
         castManager3 = new com.sellgirl.castScreen.android.send2.DLNACastManager();
         castManager4 = new com.sellgirl.castScreen.android.sendfile.DLNACastManager();
+        castManager5=new com.sellgirl.castScreen.android.send.DLNACastManager();
         game.setCaster(new IDLNADeviceCaster() {
             @Override
             // 用户选择设备后调用
@@ -281,26 +290,47 @@ protected DLNADeviceScanner2 scanner;
 ////                    Log.d(TAG, "  url: "+device.getLocation());
 ////                }
 
-                //send1
+//                //---------------------send1 多端广播-------------------
+//                UpnpService upnpService=scanner.getUpnpService();
+//                DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
+//
+//                // 1. 初始化并请求录屏权限
+//                castManager3.startCasting( AndroidLauncher.this);
+//
+//////                // 2. 连接DLNA设备（假设已扫描到）
+////                castManager3.connectDevice(device, upnpService);
+////
+//////                // 3. 发送投屏指令
+//                String videoUrl = "http://" + castManager3.getLocalIpAddress() + ":8080/stream.ts";
+////                castManager3.castToDevice(videoUrl, "Screen Mirroring");
+//
+//                String location=ip.location;
+//                if (location != null && castManager2.loadDevice(location)) {
+//                    if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+//                        castManager2.play();
+//                    }
+//                }
+
+                //---------------------send 1端广播-------------------
                 UpnpService upnpService=scanner.getUpnpService();
                 DLNADeviceScanner2.DLNADevice device= scanner.getDlnaDevice(ip);
-
                 // 1. 初始化并请求录屏权限
-                castManager3.startCasting( AndroidLauncher.this);
+                String videoUrl= castManager5.startStreaming2(AndroidLauncher.this, device, upnpService);
 
 ////                // 2. 连接DLNA设备（假设已扫描到）
 //                castManager3.connectDevice(device, upnpService);
 //
-////                // 3. 发送投屏指令
-                String videoUrl = "http://" + castManager3.getLocalIpAddress() + ":8080/stream.ts";
-//                castManager3.castToDevice(videoUrl, "Screen Mirroring");
+//////                // 3. 发送投屏指令
+//                String videoUrl = "http://" + castManager3.getLocalIpAddress() + ":8080/stream.ts";
+////                castManager3.castToDevice(videoUrl, "Screen Mirroring");
 
-                String location=ip.location;
-                if (location != null && castManager2.loadDevice(location)) {
-                    if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
-                        castManager2.play();
-                    }
-                }
+//                String location=ip.location;
+//                if (location != null && castManager2.loadDevice(location)) {
+//                    if (castManager2.setAVTransportURI(videoUrl, "Test Stream", null)) {
+//                        castManager2.play();
+//                    }
+//                }
+
             }
 
             @Override
@@ -371,28 +401,38 @@ protected DLNADeviceScanner2 scanner;
          cacheIp=cacheHelper.readGameKey(sysIp,new LocalDeviceIp());
          if(null==cacheIp){cacheIp=new LocalDeviceIp();cacheIp.setIp(new ArrayList<>());}
         new Thread(() -> {
-
-            if(null==cacheIp.getIp()){cacheIp.setIp(new ArrayList<>());}
-            boolean testFound=false;
-            for(DeviceIp ip:cacheIp.getIp()){
-                if("http://192.168.10.22:39520/description.xml".equals( ip.location)){
-                    testFound=true;
+//        Gdx.app.postRunnable(new Runnable() {
+//            @Override
+//            public void run() {
+                if (null == cacheIp.getIp()) {
+                    cacheIp.setIp(new ArrayList<>());
                 }
-                scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation(ip.location));
-            }
-            if(!testFound){
-                DeviceIp ip=new DeviceIp();
-                ip.location="http://192.168.10.22:39520/description.xml";
-                ip.udn="990a-a184-eded-e14b";
-                cacheIp.getIp().add(ip);
-                cacheHelper.saveGameKey(sysIp,cacheIp);
-                scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
-            }
+                boolean testFound = false;
+                for(DeviceIp ip:cacheIp.getIp()){
+                    if("http://192.168.10.22:39520/description.xml".equals( ip.location)){
+                        testFound=true;
+                    }
+                    try {
+                        //这里为何会使程序断开且不拨错? 发现是因为url没设置超时,已经修复
+                        scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation(ip.location));
+                    }catch (Throwable e){
+                        SGDataHelper.getLog().printException(e,TAG);
+                    }
+                }
+                if (!testFound) {
+                    DeviceIp ip = new DeviceIp();
+                    ip.location = "http://192.168.10.22:39520/description.xml";
+                    ip.udn = "990a-a184-eded-e14b";
+                    cacheIp.getIp().add(ip);
+                    sysIp=getLocalIpAddress();//更新ip
+                    cacheHelper.saveGameKey(sysIp, cacheIp);
+                    scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
+                }
 
-            scanner.startScan();
+                scanner.startScan();
 //            scanner.addDeviceToRegistry(scanner.loadDeviceFromLocation("http://192.168.10.22:39520/description.xml"));
 
-            startScreenCapture();
+                startScreenCapture();
 //            SimpleCastManager castManager2 = new SimpleCastManager();
 
 //            // 从缓存加载 location
@@ -405,8 +445,12 @@ protected DLNADeviceScanner2 scanner;
 //                    castManager2.play();
 //                }
 //            }
-            int aa=1;
-        }).start();
+                int aa = 1;
+
+                }).start();
+//            }
+//        });
+
         int aa=1;
 
 //        if(!checkAndRequestPermission()){

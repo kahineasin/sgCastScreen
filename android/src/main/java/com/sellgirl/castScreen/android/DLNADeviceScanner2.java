@@ -40,6 +40,8 @@ import org.w3c.dom.NodeList;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -48,6 +50,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class DLNADeviceScanner2 implements IDLNADeviceScanner {
     private static final String TAG = "DLNADeviceScanner";
     private AndroidUpnpService upnpService;
+//    private HashMap<String, AndroidUpnpService> upnpMap=new HashMap<>();
+//    private String upnpName;
 
 //    private final Array2<Device> rawDeviceList = new Array2<>();
     private final CopyOnWriteArrayList<DLNADevice> deviceList = new CopyOnWriteArrayList<>();
@@ -63,16 +67,23 @@ public class DLNADeviceScanner2 implements IDLNADeviceScanner {
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            upnpService = (AndroidUpnpService) service;
-            doSearch();
+            if(name.getClassName().equals(AndroidUpnpServiceImpl.class.getName())) {
+                upnpService = (AndroidUpnpService) service;
+                doSearch();
+//                upnpName=name;
+            }
         }
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            upnpService = null;
-            if (listener != null) listener.onScanStopped();
+            if(name.getClassName().equals(AndroidUpnpServiceImpl.class.getName())) {
+                upnpService = null;
+                if (listener != null) listener.onScanStopped();
+            }
         }
     };
-
+//    public DLNADeviceScanner2(){
+//
+//    }
     public interface OnDeviceScanListener {
         void onDeviceFound(DLNADevice device);
         void onDeviceLost(DLNADevice device);
@@ -360,7 +371,14 @@ public void addDevice(RemoteDevice device){
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);  // <--- 必须加这一行
             DocumentBuilder builder = factory.newDocumentBuilder();
-             doc = builder.parse(new URL(locationUrl).openStream());
+
+            // doc = builder.parse(new URL(locationUrl).openStream());//可能超时
+
+            URL url = new URL(locationUrl);
+            URLConnection urlConnection = url.openConnection();
+            urlConnection.setConnectTimeout(3000);
+            urlConnection.setReadTimeout(3000);
+            doc = builder.parse(urlConnection.getInputStream());
 
             // 3. 创建一个“空壳”RemoteDevice（关键步骤）
             int maxAgeSecond=1800;

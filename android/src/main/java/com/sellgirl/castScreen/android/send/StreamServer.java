@@ -104,19 +104,19 @@ public Response serve(IHTTPSession session) {
     String uri = session.getUri();
     if ("/stream.ts".equals(uri)) {
         try {
-            // 为这个请求创建一个全新的管道对
-            PipedOutputStream pos = new PipedOutputStream();
-            PipedInputStream pis = new PipedInputStream(pos, 1024 * 1024); // 1MB 缓冲
-
-            // 将这个客户端的输出流加入广播器
-            broadcaster.addClient(pos);
+//            // 为这个请求创建一个全新的管道对
+//            PipedOutputStream pos = new PipedOutputStream();
+//            PipedInputStream pis = new PipedInputStream(pos, 1024 * 1024); // 1MB 缓冲
+//
+//            // 将这个客户端的输出流加入广播器
+//            broadcaster.addClient(pos);
 
             // 返回分块响应
             Response response = newChunkedResponse(Response.Status.OK, "video/mp2t", pis);
             response.addHeader("Connection", "keep-alive");
             response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             return response;
-        } catch (IOException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Failed to create pipe", e);
             return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", "Pipe creation failed");
         }
