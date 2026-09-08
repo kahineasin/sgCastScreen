@@ -112,6 +112,7 @@ public Response serve(IHTTPSession session) {
 //            broadcaster.addClient(pos);
 
             // 返回分块响应
+            //实测多个客户端时,他们获得的数据都不完整.被客户1 read的数据,其它客户读不到
             Response response = newChunkedResponse(Response.Status.OK, "video/mp2t", pis);
             response.addHeader("Connection", "keep-alive");
             response.addHeader("Cache-Control", "no-cache, no-store, must-revalidate");

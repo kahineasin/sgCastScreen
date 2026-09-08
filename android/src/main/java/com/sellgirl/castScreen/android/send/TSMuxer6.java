@@ -13,7 +13,7 @@ import java.util.zip.CRC32;
 /**
  * deepseek改了100次都不行,我尝试直接把frame传到response,不转换
  */
-public class TSMuxer6 {
+public class TSMuxer6 implements ITSMuxer {
     private static final String TAG = "TSMuxer";
     private static final int TS_PACKET_SIZE = 188;
     private static final int PAT_PID = 0x0000;
@@ -36,10 +36,13 @@ public class TSMuxer6 {
         this.outputStream = outputStream;
     }
 
-    public void writeFrame(ByteBuffer buffer, MediaCodec.BufferInfo info) throws IOException {
+    @Override
+    public void writeFrame(ByteBuffer buffer, MediaCodec.BufferInfo info) //throws IOException
+    {
         byte[] data = new byte[info.size];
         buffer.get(data);
-        outputStream.write(data);
+        try {
+            outputStream.write(data);
         if(true){return;}
 
         // 提取 SPS/PPS
@@ -76,6 +79,9 @@ public class TSMuxer6 {
         if (++packetCounter % 50 == 0) {
             writePAT();
             writePMT();
+        }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -266,7 +272,11 @@ public class TSMuxer6 {
         return -1;
     }
 
-    public void close() throws IOException {
-        outputStream.close();
+    public void close()  {
+        try {
+            outputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

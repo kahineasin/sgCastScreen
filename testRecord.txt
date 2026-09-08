@@ -421,16 +421,51 @@ Icy-MetaData: 1
 ---------------------------
 由于你改了差不多100次也不行,我做了以下尝试:
 
-1.
+一.
 可能你搞错了吧，难道说，mediaCode读出的buffer直接写到serve的response 的inStream就可以了？
 所以我如下修改muxer来测试
+结果也不能播放,VLC输出
+ts warning: lost synchro
+ts warning: discontinuity indicator (pid=167)
+ts warning: lost synchro
+...
 
-2.
+二.
+手机弹出"投屏请求"后,点确定,看到logcat输出
+2026-09-08 17:21:24.941 12398-12532 AndroidGraphics         com.sellgirl.castScreen              I  resumed
+2026-09-08 17:21:24.942  1344-1408  ApplockService_TAG      system_server                        E  AppLockService------------->pkg = com.sellgirl.castScreen className = com.sellgirl.castScreen.android.AndroidLauncher mCanStartWatch = true
+2026-09-08 17:21:24.953 12398-12532 BLASTBufferQueue        com.sellgirl.castScreen              E  [SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#1](f:1,a:4) acquireNextBufferLocked: Can't acquire next buffer. Already acquired max frames 4 max:2 + 2
+2026-09-08 17:21:24.957 12398-12532 BLASTBufferQueue        com.sellgirl.castScreen              E  [SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#1](f:2,a:4) acquireNextBufferLocked: Can't acquire next buffer. Already acquired max frames 4 max:2 + 2
+2026-09-08 17:21:24.961   745-745   BufferQueueDebug        surfaceflinger                       E  [ActivityRecord{6a60ad u0 com.sellgirl.castScreen/.android.AndroidLauncher#268616 (Mirror)#268763](this:0xb400007414374078,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'ActivityRecord{6a60ad u0 com.sellgirl.castScreen/.android.AndroidLauncher#268616 (Mirror)#268763'
+2026-09-08 17:21:24.961   745-745   BufferQueueDebug        surfaceflinger                       E  [3399c4 ActivityRecordInputSink com.sellgirl.castScreen/.android.AndroidLauncher#268626 (Mirror)#268764](this:0xb4000074143d7b28,id:-1,api:0,p:-1,c:-1) id info cannot be read from '3399c4 ActivityRecordInputSink com.sellgirl.castScreen/.android.AndroidLauncher#268626 (Mirror)#268764'
+2026-09-08 17:21:24.961   745-745   BufferQueueDebug        surfaceflinger                       E  [676292f com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268643 (Mirror)#268766](this:0xb4000074143d2008,id:-1,api:0,p:-1,c:-1) id info cannot be read from '676292f com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268643 (Mirror)#268766'
+2026-09-08 17:21:24.962   745-745   BufferQueueDebug        surfaceflinger                       E  [com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268644 (Mirror)#268767](this:0xb4000074143da8b8,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268644 (Mirror)#268767'
+2026-09-08 17:21:24.962   745-745   BufferQueueDebug        surfaceflinger                       E  [Bounds for - com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268647 (Mirror)#268768](this:0xb40000741435d3f8,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'Bounds for - com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher#268647 (Mirror)#268768'
+2026-09-08 17:21:24.962   745-745   BufferQueueDebug        surfaceflinger                       E  [SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#268648 (Mirror)#268769](this:0xb4000074143f9de8,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#268648 (Mirror)#268769'
+2026-09-08 17:21:24.962   745-745   BufferQueueDebug        surfaceflinger                       E  [Background for SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#268650 (Mirror)#268770](this:0xb4000074143dd648,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'Background for SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher]#268650 (Mirror)#268770'
+2026-09-08 17:21:24.962   745-745   BufferQueueDebug        surfaceflinger                       E  [SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher](BLAST)#268649 (Mirror)#268771](this:0xb40000741440dcd8,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'SurfaceView[com.sellgirl.castScreen/com.sellgirl.castScreen.android.AndroidLauncher](BLAST)#268649 (Mirror)#268771'
+2026-09-08 17:21:24.989 12398-12408 GraphicBufferSource     com.sellgirl.castScreen              D  got buffer with new dataSpace #104
+2026-09-08 17:21:24.989 12398-12408 C2OMXNode               com.sellgirl.castScreen              D  dataspace changed to 0x104 pixel format: 0x1
+2026-09-08 17:21:25.029 12398-12625 CCodecConfig            com.sellgirl.castScreen              D  c2 config diff is   Buffer coded.init-data.value = {
+                                                                                                        00000000:  00 00 00 01 67 64 00 1f  ac 1a d0 0a 00 b7 4d 40  ....gd........M@
+                                                                                                        00000010:  40 40 41 e1 10 8d 40 00  00 00 01 68 ea 43 cb     @@A...@....h.C.
+2026-09-08 17:21:25.032 12398-12639 TSMuxer                 com.sellgirl.castScreen              D  SPS/PPS extracted
+2026-09-08 17:21:27.512 12398-12404 girl.castScreen         com.sellgirl.castScreen              I  Background concurrent mark compact GC freed 3120KB AllocSpace bytes, 39(900KB) LOS objects, 49% free, 6102KB/11MB, paused 547us,8.554ms total 31.435ms
+这是否能说明一些问题?(BufferQueueDebug这些error)
+
+三.
 另外我在java单元测试中，记录下http...ts的byte（对应的int值）的队列
+测试方法原理是 Integer.toHexString(URL.openInputStream().read())
+实测成功判断 http://mp3.sellgirl.com/img/web_sasha_thumbnail.jpg 为 ff d8 ff e0 0 10 4a 46 49 46 0 1 1 1 ...
+测试你最后一次提供的Muxer生成的http...ts如下(前1000个16进制位)
+47 40 0 11 0 0 b0 d 0 1 c1 0 0 0 1 e1 0 ba 99 70 75 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 47 41 0 10 0 2 b0 1a 0 1 c1 0 0 e1 1 0 0 1b e1 1 0 0 4d 11 d8 e ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 47 41 1 30 0 0 0 1 e0 0 27 80 80 5 20 77 a8 49 be 0 0 0 1 67 64 0 1f ac 1a d0 a 0 b7 4d 40 40 40 41 e1 10 8d 40 0 0 0 1 68 ea 43 cb ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 47 41 1 31 0 0 0 1 e0 0 22 80 80 0 0 0 0 1 67 64 0 1f ac 1a d0 a 0 b7 4d 40 40 40 41 e1 10 8d 40 0 0 0 1 68 ea 43 cb ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff 47 41 1 32 0 0 0 1 e0 41 93 80 80 5 20 77 a8 4a 98 0 0 0 1 65 88 80 0 41 5f fd 7 9c cb 4 a2 49 18 e0 11 4 b8 53 94 cd 1c b3 41 b7 5b 0 0 3 0 0 3 0 0 3 0 37 65 a8 47 89 16 c5 f6 c9 ee 0 0 3 0 0 3 3 9c 0 c 48 0 1a e1 c9 df 60 f8 a2 a 1e e3 94 f3 af 16 aa af 1d 47 8d 9c 40 0 1 ae fd c5 1e 45 5c 86 63 1f e7 f8 c3 e6 d a8 f4 de 31 be 54 f8 1 6b 4 7b 88 c4 35 a6 da 28 56 c eb 20 f6 8b d2 db a8 b0 c8 d3 b3 c2 da ca 8 55 95 59 ea 70 47 ab bf cf 3c e2 5a 28 45 d 15 fe a3 c4 be 42 6a f7 8c 3d 93 b0 5f fe 34 15 fd 19 f8 b9 d7 47 41 1 13 8c 5f 4a fd 3 41 1b 3e 80 2 5f 4 2e d4 1 57 c7 59 a9 0 96 dd a0 59 42 ee 85 8a 3d a0 3 8d 12 ff 4a e e5 ef 7b e5 ce 25 e8 6f 8b a3 dc 95 59 b8 14 58 64 76 a6 3a c7
+这样你是否可以更清楚地发现Muxer的问题了?
 
-3.
+四.
 难道 MediaCodec.getOutputBuffer(outputIndex) 拿到的buffer本身就有问题? 可能是版本兼容造成的?
+这点未验证
 
-4.
+五.
 你之前说"图片"转TS视频流很难,要几千行.那如果我不要求是图片,只是要求可以再VLC播放(就算一片白色也可以),这样你能写出来吗?
 我就是想确定"最简单直接的TS流能否在VLC播放"这件事,你之前给的"苹果视频流测试地址",始终我看不到它流内部的代码,我无法参照分析问题啊.
+

@@ -10,7 +10,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 
-public class TSMuxer5 {
+public class TSMuxer5 implements ITSMuxer{
     private static final String TAG = "TSMuxer";
     private static final int TS_PACKET_SIZE = 188;
     private static final int PAT_PID = 0x0000;

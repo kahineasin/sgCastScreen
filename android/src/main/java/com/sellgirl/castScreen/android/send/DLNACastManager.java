@@ -38,7 +38,8 @@ public class DLNACastManager //implements IDLNADeviceCaster
     private ControlPoint controlPoint;
     private StreamServer streamServer;
     public ScreenCaptureManager captureManager;
-    private TSMuxer6 muxer;
+//    private TSMuxer6 muxer;
+    private ITSMuxer muxer;
 
     private boolean inited=false;
 //    public void startStreaming(Activity activity, DLNADeviceScanner2.DLNADevice device, UpnpService upnpService) {
@@ -87,7 +88,8 @@ public class DLNACastManager //implements IDLNADeviceCaster
             }
 
             // 2. 初始化 TSMuxer，将其输出连接到 StreamServer
-            muxer = new TSMuxer6(streamServer.getOutputStream());
+            muxer = new TSMuxer5(streamServer.getOutputStream());
+//            muxer = new TSMuxer6(streamServer.getOutputStream());
 //            muxer = new TSMuxer(streamServer.getBroadcaster());
 
             // 3. 启动屏幕捕获，设置编码回调
